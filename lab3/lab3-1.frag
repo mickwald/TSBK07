@@ -1,24 +1,45 @@
 #version 150
 
 out vec4 out_Color;
+
+in vec4 worldViewPos;
 in vec2 texCoord;
-uniform sampler2D texUnit;
 in vec3 fragNormal;
 in vec4 fragColor;
+
 uniform vec4 color;
+uniform vec3 lightSourcesDirPosArr[4];
+uniform vec3 lightSourcesColorArr[4];
+uniform float specularExponent[4];
+uniform bool isDirectional[4];
+uniform sampler2D texUnit;
 
 void main(void)
 {
-	const vec3 light = vec3 (0.58,0.58,0.58);
-	const float kd=0.45f;
+	const float kd=0.95f;
 	const float ks=0.5f;
-	float shade, l_diff, l_amb;	
 	float l_spec = 0;
-	const float l_l = 1.0f;
+	const float l_l = 0.9f;
 	const float l_a = 0.1f;
+	float shade = 0;
+	float l_diff =0;
+	float l_amb = 0;
+	
+	//ambient
 	l_amb = kd*l_a;
-	l_diff = kd * dot(normalize(fragNormal), light);
-	shade = clamp(l_diff+l_amb+l_spec, 0, 1);
-	out_Color = vec4(0.3f,0.0f,0.0f,1.0f) * shade;
+
+	int i;
+	for (i = 0; i <= 3; i++){
+		vec3 s = -(normalize(lightSourcesDirPosArr[i] - vec3(worldViewPos)));
+		vec3 r = normalize(reflect(s, normalize(fragNormal)));
+		vec3 v = normalize(vec3(worldViewPos));
+	
+		
+		l_diff = kd * l_l * max(0,dot(s, normalize(fragNormal)));
+		l_spec += ks * l_l * pow(max(0,dot(r,v)),specularExponent[i]);	
+	} 
+
+	shade = clamp(clamp(l_diff,0,1)+clamp(l_amb,0,1)+clamp(l_spec,0,1), 0, 1);
+	out_Color = vec4(0.8f,0.8f,0.8f,1.0f) * shade;
 	//out_Color = texture(texUnit,texCoord) * shade;
 }

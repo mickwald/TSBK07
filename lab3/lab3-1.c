@@ -49,10 +49,30 @@ GLfloat projectionMatrix[] = {
 	0.0f, 0.0f, -1.0f, 0.0f 
 };
 
+Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
+                                 {0.0f, 1.0f, 0.0f}, // Green light
+
+                                 {0.0f, 0.0f, 1.0f}, // Blue light
+
+                                 {1.0f, 1.0f, 1.0f} }; // White light
+
+
+GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
+
+GLint isDirectional[] = {0,0,1,1};
+
+
+Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
+
+                                       {0.0f, 5.0f, 10.0f}, // Green light, positional
+
+                                       {-1.0f, 0.0f, 0.0f}, // Blue light along X
+
+                                       {0.0f, 0.0f, -1.0f} }; // White light along Z
 
 mat4 transform, rot, trans, total, complete, wmWallTransform, wmRoofTransform, wmBalconyTransform;
-mat4 wmBladeTransform, transBlade, rotBlade, groundBoxTransform, scale, cameraMatrix;
+mat4 wmBladeTransform, transBlade, rotBlade, groundBoxTransform, scale, cameraMatrix, world;
 //Maek teh madelz!
 Model *wmWalls;
 Model *wmRoof;
@@ -113,19 +133,25 @@ void drawWindmill(){
 	//Walls
 	//Move object to camera
 	complete = Mult(cameraMatrix,Mult(total,wmWallTransform));
+	world = Mult(total,wmWallTransform);
 	glUniformMatrix4fv(glGetUniformLocation(program, "uniTotal"), 1, GL_TRUE, complete.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "uniWorld"), 1, GL_TRUE, world.m);
 	DrawModel(wmWalls, program, "in_Position", "in_Normal", "inTexCoord");
 
 	//Roof
 	//Move object to camera
 	complete = Mult(cameraMatrix,Mult(total,wmRoofTransform));
+	world = Mult(total,wmRoofTransform);
 	glUniformMatrix4fv(glGetUniformLocation(program, "uniTotal"), 1, GL_TRUE, complete.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "uniWorld"), 1, GL_TRUE, world.m);
 	DrawModel(wmRoof, program, "in_Position", "in_Normal", "inTexCoord");
 
 	//Balcony
 	//Move object to camera
 	complete = Mult(cameraMatrix,Mult(total,wmBalconyTransform));
+	world = Mult(total,wmBalconyTransform);
 	glUniformMatrix4fv(glGetUniformLocation(program, "uniTotal"), 1, GL_TRUE, complete.m);
+	glUniformMatrix4fv(glGetUniformLocation(program, "uniWorld"), 1, GL_TRUE, world.m);
 	DrawModel(wmBalcony, program, "in_Position", "in_Normal", "inTexCoord");
 
 	//Blades
@@ -137,7 +163,9 @@ void drawWindmill(){
 		rotBlade = Mult(rotBlade, Rx((M_PI/2)*i));
 		total = Mult( rot, Mult(transBlade,rotBlade));
 		complete = Mult(cameraMatrix,Mult(total,wmBladeTransform));
+		world = Mult(total,wmBladeTransform);
 		glUniformMatrix4fv(glGetUniformLocation(program, "uniTotal"), 1, GL_TRUE, complete.m);
+		glUniformMatrix4fv(glGetUniformLocation(program, "uniWorld"), 1, GL_TRUE, world.m);
 		DrawModel(wmBlade, program, "in_Position", "in_Normal", "inTexCoord");
 	}
 }
@@ -213,6 +241,16 @@ void uploadTextures(){
 	glBindTexture(GL_TEXTURE_2D, skyboxTex);
 }
 
+void uploadLights(){
+	glUseProgram(program);
+	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+
+	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+	glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
+	glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
+
+}
+
 void initShaders(){
 	program = loadShaders("lab3-1.vert", "lab3-1.frag");
 	noshadeprogram = loadShaders("noshade.vert", "noshade.frag");
@@ -253,8 +291,7 @@ void init(void)
 
 	printError("init arrays");
 
-	//Ground
-	
+	uploadLights();
 
 
 	
