@@ -5,6 +5,7 @@ in vec2 texCoord;
 uniform sampler2D texUnit;
 in vec3 fragNormal;
 in vec4 fragColor;
+uniform vec4 color;
 
 void main(void)
 {
@@ -13,5 +14,6 @@ void main(void)
 	float shade;	
 	shade = kd * dot(normalize(fragNormal), light);
 	shade = clamp(shade, 0, 1);
-	out_Color = vec4(0.8f, 0.8f, 0.8f, 0.3f) * shade;
+	out_Color = vec4(0.3f,0.0f,0.0f,1.0f) * shade;
+	//out_Color = texture(texUnit,texCoord) * shade;
 }
