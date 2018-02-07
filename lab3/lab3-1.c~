@@ -79,7 +79,7 @@ Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light,
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
 
 mat4 transform, rot, trans, total, complete, wmWallTransform, wmRoofTransform, wmBalconyTransform;
-mat4 wmBladeTransform, transBlade, rotBlade, groundBoxTransform, scale, cameraMatrix, world;
+mat4 wmBladeTransform, transBlade, rotBlade, groundBoxTransform, scale, cameraMatrix, world, bunnyTransform;
 //Maek teh madelz!
 Model *wmWalls;
 Model *wmRoof;
@@ -87,6 +87,7 @@ Model *wmBalcony;
 Model *wmBlade;
 Model *groundBox;
 Model *skyBox;
+Model *bunny;
 vec3 p, l, v;
 
 
@@ -97,6 +98,7 @@ unsigned int vertexArrayObjID;
 GLfloat t;
 GLuint program;
 GLuint noshadeprogram;
+GLuint bunnyprogram;
 
 
 unsigned int skyboxTex;
@@ -127,6 +129,22 @@ void drawSkybox(){
 	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+}
+
+void drawBunny(){
+	glUseProgram(bunnyprogram);
+	trans = T(0.0f, 0.5f, 6.0f);
+	rot = Ry(-0.5f*M_PI);
+	total = Mult(rot, trans);
+
+	//Move object to camera
+	complete = Mult(cameraMatrix,Mult(total,bunnyTransform));
+	world = Mult(total,bunnyTransform);
+	glUniform1i(glGetUniformLocation(bunnyprogram,"texUnit0"),0);
+	glUniform1i(glGetUniformLocation(bunnyprogram,"texUnit1"),1);
+	glUniformMatrix4fv(glGetUniformLocation(bunnyprogram, "uniTotal"), 1, GL_TRUE, complete.m);
+	glUniformMatrix4fv(glGetUniformLocation(bunnyprogram, "uniWorld"), 1, GL_TRUE, world.m);
+	DrawModel(bunny, bunnyprogram, "in_Position", "in_Normal", "inTexCoord");
 }
 
 void drawWindmill(){
@@ -225,11 +243,12 @@ void loadModels(){
 	wmBalcony = LoadModelPlus("windmill/windmill-balcony.obj");
 	wmBlade = LoadModelPlus("windmill/blade.obj");
 	groundBox = LoadModelPlus("groundbox.obj");
+	bunny = LoadModelPlus("../lab2/bunnyplus.obj");
 	skyBox = LoadModelPlus("skybox.obj");
 }
 
 void initTransforms(){
-	cameraMatrix = wmRoofTransform = wmWallTransform = wmBalconyTransform = wmBladeTransform = groundBoxTransform = transform = IdentityMatrix();
+	cameraMatrix = wmRoofTransform = wmWallTransform = wmBalconyTransform = wmBladeTransform = groundBoxTransform = transform = bunnyTransform = IdentityMatrix();
 }
 
 
@@ -238,6 +257,8 @@ void uploadProjectionMatrices(){
 	glUniformMatrix4fv(glGetUniformLocation(noshadeprogram, "uniProjection"), 1, GL_TRUE, projectionMatrix);
 	glUseProgram(program);
 	glUniformMatrix4fv(glGetUniformLocation(program, "uniProjection"), 1, GL_TRUE, projectionMatrix);
+	glUseProgram(bunnyprogram);
+	glUniformMatrix4fv(glGetUniformLocation(bunnyprogram, "uniProjection"), 1, GL_TRUE, projectionMatrix);
 }
 
 
@@ -253,7 +274,7 @@ void uploadLights(){
 	int i;
 	for(i = 0; i <=3; i++){
 	if(!isDirectional[i]){
-	//lightSourcesDirectionsPositions[i] = MultVec3(cameraMatrix, lightSourcesDirectionsPositionsStiff[i]);
+	lightSourcesDirectionsPositions[i] = MultVec3(cameraMatrix, lightSourcesDirectionsPositionsStiff[i]);
 		}
 	}
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
@@ -262,11 +283,25 @@ void uploadLights(){
 	glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
 	glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 
+	glUseProgram(bunnyprogram);
+	for(i = 0; i <=3; i++){
+	if(!isDirectional[i]){
+	lightSourcesDirectionsPositions[i] = MultVec3(cameraMatrix, lightSourcesDirectionsPositionsStiff[i]);
+		}
+	}
+	glUniform3fv(glGetUniformLocation(bunnyprogram, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+
+	glUniform3fv(glGetUniformLocation(bunnyprogram, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+	glUniform1fv(glGetUniformLocation(bunnyprogram, "specularExponent"), 4, specularExponent);
+	glUniform1iv(glGetUniformLocation(bunnyprogram, "isDirectional"), 4, isDirectional);
+
+}
 }
 
 void initShaders(){
 	program = loadShaders("lab3-1.vert", "lab3-1.frag");
 	noshadeprogram = loadShaders("noshade.vert", "noshade.frag");
+	bunnyprogram = loadShaders("bunny.vert", "bunny.frag");
 }
 
 
@@ -325,6 +360,9 @@ void display(void)
 
 	//Windmill
 	drawWindmill();
+
+	//Bunneh
+	drawBunny();
 	
 	//Ground
 	drawGround();
@@ -355,7 +393,7 @@ int main(int argc, char *argv[])
 	glutInit(&argc, argv);
 	glutInitContextVersion(3, 2);
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-	glutCreateWindow ("Spinning windmill");
+	glutCreateWindow ("Camo bunny!");
 	glEnable(GL_DEPTH_TEST);
 	glutDisplayFunc(display);
 	glutTimerFunc(20, &onTimer, 0); 

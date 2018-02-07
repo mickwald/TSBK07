@@ -41,7 +41,7 @@ void main(void)
 		}
 		if(dot(s, fragNormal) > 0.0){	//View
 		r = normalize(reflect(s, normalize(fragNormal)));	//View
-		v = normalize(vec3(worldViewPos));	//View
+		v = vec3(worldViewPos);	//View
 		l_spec = ks * l_l * pow(max(0.01f,dot(r,v)),specularExponent[i]);
 		l_spec_arr += l_spec * lightSourcesColorArr[i];
 		l_diff = kd * l_l * max(0,dot(s, normalize(fragNormal)));	//View
