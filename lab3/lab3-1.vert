@@ -18,11 +18,10 @@ out vec4 worldViewPos;
 
 void main(void)
 {
-	fragNormal = in_Normal;
-	fragColor = inColor;
-	gl_Position = uniProjection * uniTotal * vec4(in_Position, 1.0);
-	vec3 normal = mat3(uniWorld) * in_Normal;
-	fragNormal = normal;
-	texCoord = inTexCoord;
-	worldViewPos = uniWorld * vec4(in_Position, 1.0);
+	fragColor = inColor;	
+	gl_Position = uniProjection * uniTotal * vec4(in_Position, 1.0); //Projection coords
+	vec3 normal = mat3(uniTotal) * in_Normal;	//View Coords
+	fragNormal = normal;	//View Coords
+	texCoord = inTexCoord;	//texCoords
+	worldViewPos = uniTotal * vec4(in_Position, 1.0);	//View Coords
 }

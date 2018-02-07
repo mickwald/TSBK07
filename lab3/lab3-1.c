@@ -57,8 +57,15 @@ Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
                                  {1.0f, 1.0f, 1.0f} }; // White light
 
+Point3D lightSourcesDirectionsPositionsStiff[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
 
-GLfloat specularExponent[] = {10.0, 20.0, 60.0, 5.0};
+                                       {0.0f, 5.0f, 10.0f}, // Green light, positional
+
+                                       {-1.0f, 0.0f, 0.0f}, // Blue light along X
+
+                                       {0.0f, 0.0f, -1.0f} }; // White light along Z
+
+GLfloat specularExponent[] = {100.0, 200.0, 60.0, 50.0};
 
 GLint isDirectional[] = {0,0,1,1};
 
@@ -243,6 +250,12 @@ void uploadTextures(){
 
 void uploadLights(){
 	glUseProgram(program);
+	int i;
+	for(i = 0; i <=3; i++){
+	if(!isDirectional[i]){
+	lightSourcesDirectionsPositions[i] = MultVec3(cameraMatrix, lightSourcesDirectionsPositionsStiff[i]);
+		}
+	}
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
 
 	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
@@ -315,6 +328,9 @@ void display(void)
 	
 	//Ground
 	drawGround();
+
+	//Lights
+	uploadLights();
 
 	printError("display");
 	

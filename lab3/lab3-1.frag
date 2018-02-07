@@ -21,25 +21,37 @@ void main(void)
 	float l_spec = 0;
 	const float l_l = 0.9f;
 	const float l_a = 0.1f;
-	float shade = 0;
-	float l_diff =0;
+	vec3 shade;
+	float l_diff = 0;
 	float l_amb = 0;
+	vec3 l_spec_arr = vec3(0,0,0);
+	vec3 l_diff_arr = vec3(0,0,0);
+	vec3 s,r,v;
 	
 	//ambient
 	l_amb = kd*l_a;
 
 	int i;
 	for (i = 0; i <= 3; i++){
-		vec3 s = -(normalize(lightSourcesDirPosArr[i] - vec3(worldViewPos)));
-		vec3 r = normalize(reflect(s, normalize(fragNormal)));
-		vec3 v = normalize(vec3(worldViewPos));
-	
-		
-		l_diff = kd * l_l * max(0,dot(s, normalize(fragNormal)));
-		l_spec += ks * l_l * pow(max(0,dot(r,v)),specularExponent[i]);	
+		if(!isDirectional[i]){
+			s = -(normalize(lightSourcesDirPosArr[i] - vec3(worldViewPos)));  //View
+			
+		} else {
+			s = -(normalize(lightSourcesDirPosArr[i])); //View
+		}
+		if(dot(s, fragNormal) > 0.0){	//View
+		r = normalize(reflect(s, normalize(fragNormal)));	//View
+		v = normalize(vec3(worldViewPos));	//View
+		l_spec = ks * l_l * pow(max(0.01f,dot(r,v)),specularExponent[i]);
+		l_spec_arr += l_spec * lightSourcesColorArr[i];
+		l_diff = kd * l_l * max(0,dot(s, normalize(fragNormal)));	//View
+		l_diff_arr += l_diff * lightSourcesColorArr[i];
+		}
 	} 
-
-	shade = clamp(clamp(l_diff,0,1)+clamp(l_amb,0,1)+clamp(l_spec,0,1), 0, 1);
-	out_Color = vec4(0.8f,0.8f,0.8f,1.0f) * shade;
+	
+	shade = clamp(clamp(l_diff_arr,0,1)+clamp(l_spec_arr,0,1), 0, 1);
+	//shade = l_diff_arr + l_spec_arr;
+	shade += clamp(l_amb,0,1);
+	out_Color = vec4(shade[0],shade[1],shade[2],1.0f);
 	//out_Color = texture(texUnit,texCoord) * shade;
 }
