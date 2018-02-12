@@ -16,7 +16,7 @@ uniform sampler2D texUnit;
 
 void main(void)
 {
-	const float kd=0.95f;
+	const float kd=0.45f;
 	const float ks=0.5f;
 	float l_spec = 0;
 	const float l_l = 0.9f;
