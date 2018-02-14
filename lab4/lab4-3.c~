@@ -123,13 +123,13 @@ TextureData ttex; // terrain
 int t = 0;
 
 GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
-	int x, z, d;
+	int x, z;
 	vec3 n;
 	x = (int) floor(in_x);
 	z = (int) floor(in_z);
 	float quad_x = in_x - x;
 	float quad_z = in_z - z;
-	GLfloat y_o, y_x, y_z, y_xz, res;
+	GLfloat y_o, y_x, y_z, y_xz, res, d;
 	
 	if(quad_x + quad_z <= 1){	//Near triangle in quad
 		y_o = vertex[(x + z * zLen)*3 + 1];
@@ -291,6 +291,7 @@ void display(void)
 	modelView = IdentityMatrix();
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
+	
 	
 	glBindTexture(GL_TEXTURE_2D, tex1);		// Bind Our Texture tex1
 	glUniform1i(glGetUniformLocation(program, "color"), false);
