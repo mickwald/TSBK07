@@ -13,7 +13,7 @@ void main(void)
 	shade = kd * dot(normalize(fragNormal), light);
 	shade = clamp(shade, 0, 1);
 	if(color){
-		outColor = vec4(0.0f,0.0f, 0.7f,1.0f);
+		outColor = vec4(1.0f,1.0f, 1.0f,1.0f);
 	} else {
 		outColor = texture(tex, texCoord) * shade;
 	}
