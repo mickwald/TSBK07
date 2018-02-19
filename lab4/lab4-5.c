@@ -117,7 +117,7 @@ Model *m, *m2, *tm;
 mat4 camMatrix;
 // Reference to shader program
 GLuint program;
-GLuint texGrass, texMountain, texLake, texTerrain;
+GLuint texGrass, texMountain, texLake, texTerrain, texSphere;
 mat4 sphereTransform;
 TextureData ttex; // terrain
 int t = 0;
@@ -145,7 +145,7 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 			printf("X_in: %f, Z_in: %f\n", in_x, in_z);
 			printf("X: %f, Z: %f, res: %f\n", quad_x, quad_z, res);
 		}
-		return res;
+		return res + 1.0f;
 	} else {			//Far triangle in quad
 		y_xz = vertex[((x+1) + (z+1) * zLen)*3 + 1];
 		y_x = vertex[((x+1) + z * zLen)*3 + 1];
@@ -160,7 +160,7 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 			printf("X_in: %f, Z_in: %f\n", in_x, in_z);
 			printf("X: %f, Z: %f, res: %f\n", quad_x, quad_z, res);
 		}
-		return res;
+		return res + 1.0f;
 	}
 }
 
@@ -243,7 +243,7 @@ void init(void)
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
 
-	m = LoadModelPlus("groundsphere.obj");
+	m = LoadModelPlus("webtrcc.obj");
 
 	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 1000.0);
 
@@ -273,6 +273,7 @@ void init(void)
 	LoadTGATextureSimple("rock_02_dif.tga", &texMountain);
 	LoadTGATextureSimple("rock_02_dif.tga", &texLake);
 	LoadTGATextureSimple("fft-terrain.tga", &texTerrain);
+	LoadTGATextureSimple("rock_01_dif.tga", &texSphere);
 
 	printError("init terrain");
 }
@@ -294,17 +295,20 @@ void display(void)
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
 
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);				//Texture unit 0
 	glBindTexture(GL_TEXTURE_2D, texGrass);		// Bind Our Texture texGrass
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texMountain);
 	glUniform1i(glGetUniformLocation(program, "texMountain"), 1); // Texture unit 1
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, texLake);
-	glUniform1i(glGetUniformLocation(program, "texLake"), 2); // Texture unit 0
+	glUniform1i(glGetUniformLocation(program, "texLake"), 2); // Texture unit 2
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, texTerrain);
-	glUniform1i(glGetUniformLocation(program, "texTerrain"), 3); // Texture unit 0
+	glUniform1i(glGetUniformLocation(program, "texTerrain"), 3); // Texture unit 3
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, texSphere);
+	glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(program, "color"), false);
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
