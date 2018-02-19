@@ -19,7 +19,7 @@ float sphereSpeed;
 vec3 calculateNormal(int x, int z, int zLen, GLfloat *vertex){
 	vec3 returnVector;
 	vec3 a, b, c;
-	
+
 	if(x != 0){
 		if(z != 0){
 			a = SetVector(vertex[((x-1) + z * zLen)*3 + 0], vertex[((x-1) + z * zLen)*3 + 1], vertex[((x-1) + z * zLen)*3 + 2]);
@@ -39,23 +39,23 @@ vec3 calculateNormal(int x, int z, int zLen, GLfloat *vertex){
 			a = SetVector(vertex[((x+1) + z * zLen)*3 + 0], vertex[((x+1) + z * zLen)*3 + 1], vertex[((x+1) + z * zLen)*3 + 2]);
 			b = SetVector(vertex[(x + (z+1) * zLen)*3 + 0], vertex[(x + (z+1) * zLen)*3 + 1], vertex[(x + (z+1) * zLen)*3 + 2]);
 			c = SetVector(vertex[((x+1) + (z+1) * zLen)*3 + 0], vertex[((x+1) + (z+1) * zLen)*3 + 1], vertex[((x+1) + (z+1) * zLen)*3 + 2]);
-		}		
+		}
 	}
 	returnVector = CalcNormalVector(a,b,c);
 	return returnVector;
-} 
+}
 
 Model* GenerateTerrain(TextureData *tex)
 {
 	int vertexCount = tex->width * tex->height;
 	int triangleCount = (tex->width-1) * (tex->height-1) * 2;
 	int x, z;
-	
+
 	GLfloat *vertexArray = malloc(sizeof(GLfloat) * 3 * vertexCount);
 	GLfloat *normalArray = malloc(sizeof(GLfloat) * 3 * vertexCount);
 	GLfloat *texCoordArray = malloc(sizeof(GLfloat) * 2 * vertexCount);
 	GLuint *indexArray = malloc(sizeof(GLuint) * triangleCount*3);
-	
+
 	printf("bpp %d\n", tex->bpp);
 	for (x = 0; x < tex->width; x++)
 		for (z = 0; z < tex->height; z++)
@@ -67,18 +67,18 @@ Model* GenerateTerrain(TextureData *tex)
 // Normal vectors. You need to calculate these.
 			if(x != 0 && z != 0){
 				vec3 temp = calculateNormal(x,z, tex->width, vertexArray);
-				
+
 				normalArray[(x + z * tex->width)*3 + 0] = temp.x;	//N_x
 				normalArray[(x + z * tex->width)*3 + 1] = temp.y;	//N_y
 				normalArray[(x + z * tex->width)*3 + 2] = temp.z;	//N_z
 			}
 			if (x == tex->width-1 && z == tex->height-1){
 				vec3 temp = calculateNormal(0,0, tex->width, vertexArray);
-			
+
 				normalArray[(0 + 0 * tex->width)*3 + 0] = temp.x;	//N_x
 				normalArray[(0 + 0 * tex->width)*3 + 1] = temp.y;	//N_y
 				normalArray[(0 + 0 * tex->width)*3 + 2] = temp.z;	//N_z
-			}			
+			}
 // Texture coordinates. You may want to scale them.
 			texCoordArray[(x + z * tex->width)*2 + 0] = x; // (float)x / tex->width;
 			texCoordArray[(x + z * tex->width)*2 + 1] = z; // (float)z / tex->height;
@@ -95,9 +95,9 @@ Model* GenerateTerrain(TextureData *tex)
 			indexArray[(x + z * (tex->width-1))*6 + 4] = x + (z+1) * tex->width;
 			indexArray[(x + z * (tex->width-1))*6 + 5] = x+1 + (z+1) * tex->width;
 		}
-	
+
 	// End of terrain generation
-	
+
 	// Create Model and upload to GPU:
 
 	Model* model = LoadDataToModel(
@@ -130,7 +130,7 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 	float quad_x = in_x - x;
 	float quad_z = in_z - z;
 	GLfloat y_o, y_x, y_z, y_xz, res, d;
-	
+
 	if(quad_x + quad_z <= 1){	//Near triangle in quad
 		y_o = vertex[(x + z * zLen)*3 + 1];
 		y_x = vertex[((x+1) + z * zLen)*3 + 1];
@@ -147,7 +147,7 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 		}
 		return res;
 	} else {			//Far triangle in quad
-		y_xz = vertex[((x+1) + (z+1) * zLen)*3 + 1]; 
+		y_xz = vertex[((x+1) + (z+1) * zLen)*3 + 1];
 		y_x = vertex[((x+1) + z * zLen)*3 + 1];
 		y_z = vertex[(x + (z+1) * zLen)*3 + 1];
 		vec3 xz_x, xz_z;
@@ -167,19 +167,19 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 void checkInput(){
 	if(glutKeyIsDown('w')){
 		camMatrix = Mult(camMatrix, T(0,0,0.4f));
-	}	
+	}
 	if(glutKeyIsDown('s')){
 		camMatrix = Mult(camMatrix, T(0,0,-0.4f));
-	}	
+	}
 	if(glutKeyIsDown('a')){
 		camMatrix = Mult(camMatrix, T(0.4f,0,0));
-	}	
+	}
 	if(glutKeyIsDown('d')){
 		camMatrix = Mult(camMatrix, T(-0.4f,0,0));
-	}	
+	}
 	if(glutKeyIsDown('i')){
 		camMatrix = Mult(camMatrix, T(0,-0.4f,0));
-	}	
+	}
 	if(glutKeyIsDown('k')){
 		camMatrix = Mult(camMatrix, T(0,0.4f,0));
 	}
@@ -188,25 +188,25 @@ void checkInput(){
 	}
 	if(glutKeyIsDown('l')){
 		camMatrix = Mult(Ry(1*M_PI/180),camMatrix );
-	}	
+	}
 	if(glutKeyIsDown(GLUT_KEY_DOWN)){
 		sphereTransform.m[3] -= sphereSpeed;
-	}	
+	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
 		sphereTransform.m[3] += sphereSpeed;
-	}	
+	}
 	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
 		sphereTransform.m[11] += sphereSpeed;
-	}	
+	}
 	if(glutKeyIsDown(GLUT_KEY_LEFT)){
 		sphereTransform.m[11] -= sphereSpeed;
-	}	
+	}
 	if(glutKeyIsDown('+')){
 		if(t == 0){
 		sphereSpeed += 0.01f;
 		printf("Speed: %f\n", sphereSpeed);
 		}
-	}	
+	}
 	if(glutKeyIsDown('-')){
 		if(t== 0){
 		sphereSpeed -= 0.01f;
@@ -219,7 +219,7 @@ void checkInput(){
 		camMatrix = lookAt(cam.x, cam.y, cam.z,
 					lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
 					0.0, 1.0, 0.0);
-	}	
+	}
 	if(sphereTransform.m[11] < 0){
 		sphereTransform.m[11] = 0;
 	}
@@ -251,29 +251,29 @@ void init(void)
 	program = loadShaders("terrain-5.vert", "terrain-5.frag");
 	glUseProgram(program);
 	printError("init shader");
-	
+
 	sphereTransform = IdentityMatrix();
 	sphereSpeed = 0.1f;
-	
+
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(program, "texGrass"), 0); // Texture unit 0
 	LoadTGATextureSimple("Grass_tile_B_diffuse.tga", &texGrass);
-	
+
 	vec3 cam = {0, 0, 0};
 	vec3 lookAtPoint = {1, 0, 0};
 	camMatrix = lookAt(cam.x, cam.y, cam.z,
 				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
 				0.0, 1.0, 0.0);
 // Load terrain data
-	
-	
+
+
 	LoadTGATextureData("fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	//If done above Texture data load 0 generate terrain, causes graphical errors in edges ???
 	LoadTGATextureSimple("rock_02_dif.tga", &texMountain);
 	LoadTGATextureSimple("rock_02_dif.tga", &texLake);
 	LoadTGATextureSimple("fft-terrain.tga", &texTerrain);
-	
+
 	printError("init terrain");
 }
 
@@ -281,27 +281,30 @@ void display(void)
 {
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 	mat4 total, modelView;
-	
+
 	printError("pre display");
-	
+
 	glUseProgram(program);
 
 	// Build matrix
-	
+
 	modelView = IdentityMatrix();
 	total = Mult(camMatrix, modelView);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, total.m);
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, texGrass);		// Bind Our Texture texGrass
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texMountain);
+	glUniform1i(glGetUniformLocation(program, "texMountain"), 1); // Texture unit 1
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, texLake);
+	glUniform1i(glGetUniformLocation(program, "texLake"), 2); // Texture unit 0
 	glActiveTexture(GL_TEXTURE3);
 	glBindTexture(GL_TEXTURE_2D, texTerrain);
+	glUniform1i(glGetUniformLocation(program, "texTerrain"), 3); // Texture unit 0
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(program, "color"), false);
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
