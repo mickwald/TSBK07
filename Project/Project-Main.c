@@ -16,6 +16,42 @@ mat4 projectionMatrix;
 
 float sphereSpeed;
 
+mat4 camMatrix;
+mat4 transform, rot, trans, total, complete, scale;
+//SKYBOX STUFF!!!
+Model *skyBox;
+GLuint skyboxprogram;
+
+unsigned int skyboxTex;
+
+void drawSkybox(){
+	glUseProgram(skyboxprogram);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	mat4 skyBoxTransform = camMatrix;
+	skyBoxTransform.m[3] = 0;
+	skyBoxTransform.m[7] = 0;
+	skyBoxTransform.m[11] = 0;
+	trans = T(0.0f, -0.1f, 0.0f);
+	rot = Ry(0);
+	total = Mult(rot, trans);
+	scale = S(0.3f,2.0f,0.3f);
+	total = Mult(total,scale);
+	complete = Mult(skyBoxTransform, total);
+
+	glUseProgram(skyboxprogram);
+	glActiveTexture(GL_TEXTURE5);
+	glUniform1i(glGetUniformLocation(skyboxprogram,"texUnit"),5);
+	glUniform1i(glGetUniformLocation(skyboxprogram,"uniWrap"),1);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxprogram, "uniTotal"), 1, GL_TRUE, complete.m);
+
+	DrawModel(skyBox, skyboxprogram, "in_Position", NULL, "inTexCoord");
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+}
+
 vec3 calculateNormal(int x, int z, int zLen, GLfloat *vertex){
 	vec3 returnVector;
 	vec3 a, b, c;
@@ -114,7 +150,7 @@ Model* GenerateTerrain(TextureData *tex)
 
 // vertex array object
 Model *m, *m2, *tm;
-mat4 camMatrix;
+
 // Reference to shader program
 GLuint program;
 GLuint texGrass, texMountain, texLake, texTerrain, texSphere;
@@ -243,12 +279,14 @@ void init(void)
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
 
-	//m = LoadModelPlus("webtrcc.obj");
+	m = LoadModelPlus("webtrcc.obj");
+	skyBox = LoadModelPlus("skybox.obj");
 
-	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 1000.0);
+	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
 
 	// Load and compile shader
 	program = loadShaders("terrain-5.vert", "terrain-5.frag");
+	skyboxprogram = loadShaders("skybox.vert", "skybox.frag");
 	glUseProgram(program);
 	printError("init shader");
 
@@ -256,8 +294,14 @@ void init(void)
 	sphereSpeed = 0.1f;
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
+
+	glUseProgram(skyboxprogram);
+	glUniformMatrix4fv(glGetUniformLocation(skyboxprogram, "uniProjection"), 1, GL_TRUE, projectionMatrix.m);
+
+	glUseProgram(program);
 	glUniform1i(glGetUniformLocation(program, "texGrass"), 0); // Texture unit 0
 	LoadTGATextureSimple("Grass_tile_B_diffuse.tga", &texGrass);
+	LoadTGATextureSimple("SkyBox512.tga", &skyboxTex);
 
 	vec3 cam = {0, 0, 0};
 	vec3 lookAtPoint = {1, 0, 0};
@@ -282,6 +326,9 @@ void display(void)
 {
 	// clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//Skybox
+	drawSkybox();
 
 	mat4 total, modelView;
 
@@ -309,6 +356,9 @@ void display(void)
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, texSphere);
 	glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
+	glActiveTexture(GL_TEXTURE5);
+	glBindTexture(GL_TEXTURE_2D, skyboxTex);
+	glUniform1i(glGetUniformLocation(skyboxprogram, "skyboxTex"), 5); // Texture unit 5
 	glActiveTexture(GL_TEXTURE0);
 	glUniform1i(glGetUniformLocation(program, "color"), false);
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
