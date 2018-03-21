@@ -172,10 +172,14 @@ void checkInput(){
 		camMatrix = Mult(camMatrix, T(0,0,-0.4f));
 	}
 	if(glutKeyIsDown('a')){
+		SetTransposed('1');
 		camMatrix = Mult(camMatrix, T(0.4f,0,0));
+		SetTransposed(0);
 	}
 	if(glutKeyIsDown('d')){
+		SetTransposed('1');
 		camMatrix = Mult(camMatrix, T(-0.4f,0,0));
+		SetTransposed(0);
 	}
 	if(glutKeyIsDown('i')){
 		camMatrix = Mult(camMatrix, T(0,-0.4f,0));
