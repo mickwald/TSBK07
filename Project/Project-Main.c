@@ -12,9 +12,48 @@
 #include "LoadTGA.h"
 
 
+Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
+
+                                 {0.0f, 1.0f, 0.0f}, // Green light
+
+                                 {0.0f, 0.0f, 1.0f}, // Blue light
+
+                                 {1.0f, 1.0f, 1.0f} }; // White light
+
+Point3D lightSourcesDirectionsPositionsStiff[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
+
+                                       {0.0f, 5.0f, 10.0f}, // Green light, positional
+
+                                       {-1.0f, 0.0f, 0.0f}, // Blue light along X
+
+                                       {0.0f, 0.0f, -1.0f} }; // White light along Z
+
+GLfloat specularExponent[] = {100.0, 200.0, 60.0, 550.0};
+
+GLint isDirectional[] = {0,0,1,1};
+
+
+Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light, positional
+
+                                       {0.0f, 5.0f, 10.0f}, // Green light, positional
+
+                                       {-1.0f, 0.0f, 0.0f}, // Blue light along X
+
+                                       {0.0f, 0.0f, -1.0f} }; // White light along Z
+
 mat4 projectionMatrix;
 
 float sphereSpeed;
+
+// vertex array object
+Model *m, *m2, *tm;
+
+// Reference to shader program
+GLuint program;
+GLuint texGrass, texMountain, texLake, texTerrain, texSphere;
+mat4 sphereTransform;
+TextureData ttex; // terrain
+int t = 0;
 
 mat4 camMatrix;
 mat4 transform, rot, trans, total, complete, scale;
@@ -50,6 +89,21 @@ void drawSkybox(){
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
+}
+
+void uploadLights(){
+	glUseProgram(program);
+	int i;
+	for(i = 0; i <=3; i++){
+	if(!isDirectional[i]){
+	lightSourcesDirectionsPositions[i] = MultVec3(camMatrix, lightSourcesDirectionsPositionsStiff[i]);
+		}
+	}
+	glUniform3fv(glGetUniformLocation(program, "lightSourcesDirPosArr"), 4, &lightSourcesDirectionsPositions[0].x);
+
+	glUniform3fv(glGetUniformLocation(program, "lightSourcesColorArr"), 4, &lightSourcesColorsArr[0].x);
+	glUniform1fv(glGetUniformLocation(program, "specularExponent"), 4, specularExponent);
+	glUniform1iv(glGetUniformLocation(program, "isDirectional"), 4, isDirectional);
 }
 
 vec3 calculateNormal(int x, int z, int zLen, GLfloat *vertex){
@@ -148,16 +202,6 @@ Model* GenerateTerrain(TextureData *tex)
 	return model;
 }
 
-// vertex array object
-Model *m, *m2, *tm;
-
-// Reference to shader program
-GLuint program;
-GLuint texGrass, texMountain, texLake, texTerrain, texSphere;
-mat4 sphereTransform;
-TextureData ttex; // terrain
-int t = 0;
-
 GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 	int x, z;
 	vec3 n;
@@ -202,22 +246,22 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 
 void checkInput(){
 	if(glutKeyIsDown('w')){
-		camMatrix = Mult(camMatrix, T(0,0,0.4f));
+		camMatrix = Mult(camMatrix, T(-0.4f*camMatrix.m[2],0,0.4f*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown('s')){
-		camMatrix = Mult(camMatrix, T(0,0,-0.4f));
+		camMatrix = Mult(camMatrix, T(0.4f*camMatrix.m[2],0,-0.4f*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown('a')){
-		camMatrix = Mult(camMatrix, T(0.4f,0,0));
+		camMatrix = Mult(camMatrix, T(0.4f*camMatrix.m[0],0,0.4f*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown('d')){
-		camMatrix = Mult(camMatrix, T(-0.4f,0,0));
+		camMatrix = Mult(camMatrix, T(-0.4f*camMatrix.m[0],0,-0.4f*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown('i')){
-		camMatrix = Mult(camMatrix, T(0,-0.4f,0));
+		camMatrix = Mult(camMatrix, T(0,-0.2f,0));
 	}
 	if(glutKeyIsDown('k')){
-		camMatrix = Mult(camMatrix, T(0,0.4f,0));
+		camMatrix = Mult(camMatrix, T(0,0.2f,0));
 	}
 	if(glutKeyIsDown('j')){
 		camMatrix = Mult(Ry(-1*M_PI/180),camMatrix );
@@ -226,16 +270,16 @@ void checkInput(){
 		camMatrix = Mult(Ry(1*M_PI/180),camMatrix );
 	}
 	if(glutKeyIsDown(GLUT_KEY_DOWN)){
-		sphereTransform.m[3] -= sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(-sphereSpeed*camMatrix.m[2],0,sphereSpeed*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
-		sphereTransform.m[3] += sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(sphereSpeed*camMatrix.m[2],0,-sphereSpeed*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
-		sphereTransform.m[11] += sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(sphereSpeed*camMatrix.m[0],0,sphereSpeed*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_LEFT)){
-		sphereTransform.m[11] -= sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(-sphereSpeed*camMatrix.m[0],0,-sphereSpeed*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown('+')){
 		if(t == 0){
@@ -250,11 +294,11 @@ void checkInput(){
 		}
 	}
 	if(glutKeyIsDown('r')){
-		vec3 cam = {0, 5, 8};
-		vec3 lookAtPoint = {2, 5, 2};
-		camMatrix = lookAt(cam.x, cam.y, cam.z,
-					lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
-					0.0, 1.0, 0.0);
+		camMatrix = IdentityMatrix();
+		camMatrix = Mult(Ry(135*M_PI/180.0f),camMatrix);
+	}
+	if(glutKeyIsDown('m')){
+		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",camMatrix.m[0],camMatrix.m[1],camMatrix.m[2],camMatrix.m[3],camMatrix.m[4],camMatrix.m[5],camMatrix.m[6],camMatrix.m[7],camMatrix.m[8],camMatrix.m[9],camMatrix.m[10],camMatrix.m[11],camMatrix.m[12],camMatrix.m[13],camMatrix.m[14],camMatrix.m[15]);
 	}
 	if(sphereTransform.m[11] < 0){
 		sphereTransform.m[11] = 0;
@@ -268,6 +312,7 @@ void checkInput(){
 			t = 0;
 		}
 	}
+	//camMatrix.m[7] = -cam_height + calcHeight(camMatrix.m[3], camMatrix.m[11], ttex.width, tm->vertexArray);
 }
 
 
@@ -320,6 +365,9 @@ void init(void)
 	LoadTGATextureSimple("rock_01_dif.tga", &texSphere);
 
 	printError("init terrain");
+
+	uploadLights();
+
 }
 
 void display(void)

@@ -3,13 +3,16 @@
 in  vec3 inPosition;
 in  vec3 inNormal;
 in vec2 inTexCoord;
+
 out vec2 texCoord;
 out vec3 fragNormal;
 out vec3 Pos;
+out vec4 worldViewPos;
 
 // NY
 uniform mat4 projMatrix;
 uniform mat4 mdlMatrix;
+
 
 void main(void)
 {
@@ -18,4 +21,5 @@ void main(void)
 	fragNormal = inNormal;
 	Pos = inPosition;
 	gl_Position = projMatrix * mdlMatrix * vec4(inPosition, 1.0);
+	worldViewPos = mdlMatrix * vec4(inPosition, 1.0);	//View Coords
 }
