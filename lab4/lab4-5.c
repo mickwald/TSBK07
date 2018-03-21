@@ -15,6 +15,7 @@
 mat4 projectionMatrix;
 
 float sphereSpeed;
+float cam_height;
 
 vec3 calculateNormal(int x, int z, int zLen, GLfloat *vertex){
 	vec3 returnVector;
@@ -166,22 +167,22 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 
 void checkInput(){
 	if(glutKeyIsDown('w')){
-		camMatrix = Mult(camMatrix, T(0,0,0.4f));
+		camMatrix = Mult(camMatrix, T(-0.4f*camMatrix.m[2],0,0.4f*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown('s')){
-		camMatrix = Mult(camMatrix, T(0,0,-0.4f));
+		camMatrix = Mult(camMatrix, T(0.4f*camMatrix.m[2],0,-0.4f*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown('a')){
-		camMatrix = Mult(camMatrix, T(0.4f,0,0));
+		camMatrix = Mult(camMatrix, T(0.4f*camMatrix.m[0],0,0.4f*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown('d')){
-		camMatrix = Mult(camMatrix, T(-0.4f,0,0));
+		camMatrix = Mult(camMatrix, T(-0.4f*camMatrix.m[0],0,-0.4f*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown('i')){
-		camMatrix = Mult(camMatrix, T(0,-0.4f,0));
+		camMatrix = Mult(camMatrix, T(0,-0.2f,0));
 	}
 	if(glutKeyIsDown('k')){
-		camMatrix = Mult(camMatrix, T(0,0.4f,0));
+		camMatrix = Mult(camMatrix, T(0,0.2f,0));
 	}
 	if(glutKeyIsDown('j')){
 		camMatrix = Mult(Ry(-1*M_PI/180),camMatrix );
@@ -190,16 +191,16 @@ void checkInput(){
 		camMatrix = Mult(Ry(1*M_PI/180),camMatrix );
 	}
 	if(glutKeyIsDown(GLUT_KEY_DOWN)){
-		sphereTransform.m[3] -= sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(-sphereSpeed*camMatrix.m[2],0,sphereSpeed*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
-		sphereTransform.m[3] += sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(sphereSpeed*camMatrix.m[2],0,-sphereSpeed*camMatrix.m[0]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
-		sphereTransform.m[11] += sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(sphereSpeed*camMatrix.m[0],0,sphereSpeed*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_LEFT)){
-		sphereTransform.m[11] -= sphereSpeed;
+		sphereTransform = Mult(sphereTransform, T(-sphereSpeed*camMatrix.m[0],0,-sphereSpeed*camMatrix.m[2]));
 	}
 	if(glutKeyIsDown('+')){
 		if(t == 0){
@@ -214,11 +215,11 @@ void checkInput(){
 		}
 	}
 	if(glutKeyIsDown('r')){
-		vec3 cam = {0, 5, 8};
-		vec3 lookAtPoint = {2, 5, 2};
-		camMatrix = lookAt(cam.x, cam.y, cam.z,
-					lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
-					0.0, 1.0, 0.0);
+		camMatrix = IdentityMatrix();
+		camMatrix = Mult(Ry(135*M_PI/180.0f),camMatrix);
+	}
+	if(glutKeyIsDown('m')){
+		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",camMatrix.m[0],camMatrix.m[1],camMatrix.m[2],camMatrix.m[3],camMatrix.m[4],camMatrix.m[5],camMatrix.m[6],camMatrix.m[7],camMatrix.m[8],camMatrix.m[9],camMatrix.m[10],camMatrix.m[11],camMatrix.m[12],camMatrix.m[13],camMatrix.m[14],camMatrix.m[15]);
 	}
 	if(sphereTransform.m[11] < 0){
 		sphereTransform.m[11] = 0;
@@ -232,6 +233,7 @@ void checkInput(){
 			t = 0;
 		}
 	}
+	//camMatrix.m[7] = -cam_height + calcHeight(camMatrix.m[3], camMatrix.m[11], ttex.width, tm->vertexArray);
 }
 
 
@@ -254,19 +256,18 @@ void init(void)
 
 	sphereTransform = IdentityMatrix();
 	sphereSpeed = 0.1f;
+	cam_height = 0.0f;
 
 	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
 	glUniform1i(glGetUniformLocation(program, "texGrass"), 0); // Texture unit 0
 	LoadTGATextureSimple("Grass_tile_B_diffuse.tga", &texGrass);
 
-	vec3 cam = {0, 0, 0};
-	vec3 lookAtPoint = {1, 0, 0};
-	camMatrix = lookAt(cam.x, cam.y, cam.z,
-				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
-				0.0, 1.0, 0.0);
-// Load terrain data
+
+	camMatrix = IdentityMatrix();
+	camMatrix = Mult(Ry(135*M_PI/180.0f),camMatrix);
 
 
+	// Load terrain data
 	LoadTGATextureData("fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);
 	//If done above Texture data load 0 generate terrain, causes graphical errors in edges ???
