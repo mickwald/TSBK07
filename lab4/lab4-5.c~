@@ -166,14 +166,10 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 
 void checkInput(){
 	if(glutKeyIsDown('w')){
-		SetTransposed('1');
 		camMatrix = Mult(camMatrix, T(0,0,0.4f));
-		SetTransposed(0);
 	}
 	if(glutKeyIsDown('s')){
-		SetTransposed('1');
 		camMatrix = Mult(camMatrix, T(0,0,-0.4f));
-		SetTransposed(0);
 	}
 	if(glutKeyIsDown('a')){
 		SetTransposed('1');
