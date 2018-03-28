@@ -39,6 +39,11 @@ void init(void)
 				0.0, 1.0, 0.0);
 // Load terrain data
 
+	//set skyboxMatrix
+	skyBoxTransform = camMatrix;
+	skyBoxTransform.m[3] = 0;
+	skyBoxTransform.m[7] = 0;
+	skyBoxTransform.m[11] = 0;
 
 	LoadTGATextureData("fft-terrain.tga", &ttex);
 	tm = GenerateTerrain(&ttex);

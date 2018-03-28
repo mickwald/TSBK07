@@ -10,7 +10,7 @@
 #include "LoadTGA.h"
 
 #include "init.h"
-
+#include "projectio.h"
 
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
@@ -41,7 +41,7 @@ Point3D lightSourcesDirectionsPositions[] = { {10.0f, 5.0f, 0.0f}, // Red light,
 
                                        {0.0f, 0.0f, -1.0f} }; // White light along Z
 
-mat4 projectionMatrix;
+
 
 float sphereSpeed;
 
@@ -49,9 +49,8 @@ float sphereSpeed;
 Model *m, *m2, *tm;
 
 // Reference to shader program
-GLuint program;
-GLuint texGrass, texMountain, texLake, texTerrain, texSphere;
-mat4 sphereTransform;
+GLuint program, texGrass, texMountain, texLake, texTerrain, texSphere;
+mat4 sphereTransform, projectionMatrix;
 TextureData ttex; // terrain
 int t = 0;
 
@@ -60,6 +59,7 @@ mat4 transform, rot, trans, total, complete, scale;
 //SKYBOX STUFF!!!
 Model *skyBox;
 GLuint skyboxprogram;
+mat4 skyBoxTransform;
 
 unsigned int skyboxTex;
 
@@ -68,10 +68,7 @@ void drawSkybox(){
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	mat4 skyBoxTransform = camMatrix;
-	skyBoxTransform.m[3] = 0;
-	skyBoxTransform.m[7] = 0;
-	skyBoxTransform.m[11] = 0;
+	
 	trans = T(0.0f, -0.1f, 0.0f);
 	rot = Ry(0);
 	total = Mult(rot, trans);
@@ -244,131 +241,8 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 	}
 }
 
-void checkInput(){
-	if(glutKeyIsDown('w')){
-		camMatrix = Mult(camMatrix, T(-0.4f*camMatrix.m[2],0,0.4f*camMatrix.m[0]));
-	}
-	if(glutKeyIsDown('s')){
-		camMatrix = Mult(camMatrix, T(0.4f*camMatrix.m[2],0,-0.4f*camMatrix.m[0]));
-	}
-	if(glutKeyIsDown('a')){
-		camMatrix = Mult(camMatrix, T(0.4f*camMatrix.m[0],0,0.4f*camMatrix.m[2]));
-	}
-	if(glutKeyIsDown('d')){
-		camMatrix = Mult(camMatrix, T(-0.4f*camMatrix.m[0],0,-0.4f*camMatrix.m[2]));
-	}
-	if(glutKeyIsDown('i')){
-		camMatrix = Mult(camMatrix, T(0,-0.2f,0));
-	}
-	if(glutKeyIsDown('k')){
-		camMatrix = Mult(camMatrix, T(0,0.2f,0));
-	}
-	if(glutKeyIsDown('j')){
-		camMatrix = Mult(Ry(-1*M_PI/180),camMatrix );
-	}
-	if(glutKeyIsDown('l')){
-		camMatrix = Mult(Ry(1*M_PI/180),camMatrix );
-	}
-	if(glutKeyIsDown(GLUT_KEY_DOWN)){
-		sphereTransform = Mult(sphereTransform, T(-sphereSpeed*camMatrix.m[2],0,sphereSpeed*camMatrix.m[0]));
-	}
-	if(glutKeyIsDown(GLUT_KEY_UP)){
-		sphereTransform = Mult(sphereTransform, T(sphereSpeed*camMatrix.m[2],0,-sphereSpeed*camMatrix.m[0]));
-	}
-	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
-		sphereTransform = Mult(sphereTransform, T(sphereSpeed*camMatrix.m[0],0,sphereSpeed*camMatrix.m[2]));
-	}
-	if(glutKeyIsDown(GLUT_KEY_LEFT)){
-		sphereTransform = Mult(sphereTransform, T(-sphereSpeed*camMatrix.m[0],0,-sphereSpeed*camMatrix.m[2]));
-	}
-	if(glutKeyIsDown('+')){
-		if(t == 0){
-		sphereSpeed += 0.01f;
-		printf("Speed: %f\n", sphereSpeed);
-		}
-	}
-	if(glutKeyIsDown('-')){
-		if(t== 0){
-		sphereSpeed -= 0.01f;
-		printf("Speed: %f\n", sphereSpeed);
-		}
-	}
-	if(glutKeyIsDown('r')){
-		camMatrix = IdentityMatrix();
-		camMatrix = Mult(Ry(135*M_PI/180.0f),camMatrix);
-	}
-	if(glutKeyIsDown('m')){
-		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",camMatrix.m[0],camMatrix.m[1],camMatrix.m[2],camMatrix.m[3],camMatrix.m[4],camMatrix.m[5],camMatrix.m[6],camMatrix.m[7],camMatrix.m[8],camMatrix.m[9],camMatrix.m[10],camMatrix.m[11],camMatrix.m[12],camMatrix.m[13],camMatrix.m[14],camMatrix.m[15]);
-	}
-	if(sphereTransform.m[11] < 0){
-		sphereTransform.m[11] = 0;
-	}
-	if(sphereTransform.m[3] < 0){
-		sphereTransform.m[3] = 0;
-	}
-	if(t++ <= 10){
-		if(t == 10){
-			//printf("X: %f, Y: %f, Z: %f\n", camMatrix.m[3], camMatrix.m[7], camMatrix.m[11]);
-			t = 0;
-		}
-	}
-	//camMatrix.m[7] = -cam_height + calcHeight(camMatrix.m[3], camMatrix.m[11], ttex.width, tm->vertexArray);
-}
 
 
-void init(void)
-{
-	// GL inits
-	glClearColor(0.8,0.8,0.8,0);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	printError("GL inits");
-
-	m = LoadModelPlus("webtrcc.obj");
-	skyBox = LoadModelPlus("skybox.obj");
-
-	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
-
-	// Load and compile shader
-	program = loadShaders("world.vert", "world.frag");
-	skyboxprogram = loadShaders("skybox.vert", "skybox.frag");
-	glUseProgram(program);
-	printError("init shader");
-
-	sphereTransform = IdentityMatrix();
-	sphereSpeed = 0.1f;
-
-	glUniformMatrix4fv(glGetUniformLocation(program, "projMatrix"), 1, GL_TRUE, projectionMatrix.m);
-
-	glUseProgram(skyboxprogram);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxprogram, "uniProjection"), 1, GL_TRUE, projectionMatrix.m);
-
-	glUseProgram(program);
-	glUniform1i(glGetUniformLocation(program, "texGrass"), 0); // Texture unit 0
-	LoadTGATextureSimple("Grass_tile_B_diffuse.tga", &texGrass);
-	LoadTGATextureSimple("SkyBox512.tga", &skyboxTex);
-
-	vec3 cam = {0, 0, 0};
-	vec3 lookAtPoint = {1, 0, 0};
-	camMatrix = lookAt(cam.x, cam.y, cam.z,
-				lookAtPoint.x, lookAtPoint.y, lookAtPoint.z,
-				0.0, 1.0, 0.0);
-// Load terrain data
-
-
-	LoadTGATextureData("fft-terrain.tga", &ttex);
-	tm = GenerateTerrain(&ttex);
-	//If done above Texture data load 0 generate terrain, causes graphical errors in edges ???
-	LoadTGATextureSimple("rock_02_dif.tga", &texMountain);
-	LoadTGATextureSimple("rock_02_dif.tga", &texLake);
-	LoadTGATextureSimple("fft-terrain.tga", &texTerrain);
-	LoadTGATextureSimple("rock_01_dif.tga", &texSphere);
-
-	printError("init terrain");
-
-	uploadLights();
-
-}
 
 void display(void)
 {
