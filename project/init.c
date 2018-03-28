@@ -1,4 +1,5 @@
 #include "MicroGlut.h"
+#include "VectorUtils3.h"
 
 void init(void)
 {
