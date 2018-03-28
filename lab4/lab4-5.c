@@ -221,6 +221,9 @@ void checkInput(){
 	if(glutKeyIsDown('m')){
 		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",camMatrix.m[0],camMatrix.m[1],camMatrix.m[2],camMatrix.m[3],camMatrix.m[4],camMatrix.m[5],camMatrix.m[6],camMatrix.m[7],camMatrix.m[8],camMatrix.m[9],camMatrix.m[10],camMatrix.m[11],camMatrix.m[12],camMatrix.m[13],camMatrix.m[14],camMatrix.m[15]);
 	}
+	if(glutKeyIsDown('n')){
+		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",sphereTransform.m[0],sphereTransform.m[1],sphereTransform.m[2],sphereTransform.m[3],sphereTransform.m[4],sphereTransform.m[5],sphereTransform.m[6],sphereTransform.m[7],sphereTransform.m[8],sphereTransform.m[9],sphereTransform.m[10],sphereTransform.m[11],sphereTransform.m[12],sphereTransform.m[13],sphereTransform.m[14],sphereTransform.m[15]);
+	}
 	if(sphereTransform.m[11] < 0){
 		sphereTransform.m[11] = 0;
 	}
