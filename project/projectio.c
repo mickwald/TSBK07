@@ -1,4 +1,4 @@
-#include "Microglut.h"
+#include "MicroGlut.h"
 
 void checkInput(){
 	if(glutKeyIsDown('w')){
