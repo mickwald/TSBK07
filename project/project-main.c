@@ -116,7 +116,6 @@ void display(void)
 	
 	glUseProgram(program);
 	
-	printf("t: %d\n", t);
 	// Build matrix
 
 	modelView = IdentityMatrix();
@@ -152,7 +151,6 @@ void display(void)
 	mat4 scale = S(1.0f,1.0f,1.0f);
 	total = Mult(trans,scale);
 	total = Mult(rot, total);
-	
 	
 	total.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
 	
