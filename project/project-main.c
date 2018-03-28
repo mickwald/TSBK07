@@ -305,7 +305,7 @@ void display(void)
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
-	checkInput();
+	projectio.checkInput();
 	glutPostRedisplay();
 }
 
@@ -322,7 +322,7 @@ int main(int argc, char **argv)
 	glutInitWindowSize (600, 600);
 	glutCreateWindow ("TSBK07 Lab 4");
 	glutDisplayFunc(display);
-	init ();
+	init.init ();
 	glutTimerFunc(20, &timer, 0);
 
 	glutPassiveMotionFunc(mouse);
