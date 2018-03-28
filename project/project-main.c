@@ -9,6 +9,8 @@
 #include "loadobj.h"
 #include "LoadTGA.h"
 
+#include "init.h"
+
 
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
