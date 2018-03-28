@@ -1,5 +1,3 @@
-// Lab 4, terrain generation
-
 #ifdef __APPLE__
 	#include <OpenGL/gl3.h>
 	// Linking hint for Lightweight IDE
