@@ -330,7 +330,7 @@ void init(void)
 	projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
 
 	// Load and compile shader
-	program = loadShaders("terrain-5.vert", "terrain-5.frag");
+	program = loadShaders("world.vert", "world.frag");
 	skyboxprogram = loadShaders("skybox.vert", "skybox.frag");
 	glUseProgram(program);
 	printError("init shader");
