@@ -5,7 +5,7 @@ all : project-main.out
 
 
 project-main.out : project-main.c $(commondir)GL_utilities.c $(commondir)VectorUtils3.c $(commondir)loadobj.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c
-	gcc -Wall -o project-main.out -I$(commondir) -I../common/Linux -DGL_GLEXT_PROTOTYPES project-main.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c -lXt -lX11 -lGL -lm
+	gcc -Wall -o project-main.out -I$(commondir) -I../common/Linux -DGL_GLEXT_PROTOTYPES project-main.c init.c projectio.c $(commondir)GL_utilities.c $(commondir)loadobj.c $(commondir)VectorUtils3.c $(commondir)LoadTGA.c $(commondir)Linux/MicroGlut.c -lXt -lX11 -lGL -lm
 
 
 clean :
