@@ -68,14 +68,27 @@ void main(void)
 	if(color){
 		outColor = texture(texSphere, texCoord)*vec4(shade[0],shade[1],shade[2],1.0f);
 	} else {
-			if(Pos.y == 0){ // Apply Lake texture Rock texture * blue
-				outColor = texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(0.0f, 0.6f, 1.0f, 1.0f);
+			if(Pos.y <= 0.1f){ // Apply Lake texture Rock texture * blue
+				outColor = texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(0.0f, 0.6f, 1.0f, 1.0f) * (1-(10*Pos.y));
+				outColor += texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(1.0f, 1.0f, 0.5f, 1.0f) * (10*Pos.y);
 			}
-			else if(Pos.y > 0.0f && Pos.y <= 0.3f){	//Beach
+			else if(Pos.y > 0.0f && Pos.y <= 0.2f){	//Beach
 				outColor = texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(1.0f, 1.0f, 0.5f, 1.0f);
 			}
-		 	else if(Pos.y >= 8.0f && Pos.y < 9.7f){ //Apply Mountain texture
+			else if(Pos.y > 0.2f && Pos.y <= 0.3f){	//Beach-to-grass
+				outColor = texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(1.0f, 1.0f, 0.5f, 1.0f) * (1-(10*(Pos.y-0.2f)));
+				outColor += texture(texGrass, texCoord) * shadeNoSpec * (10*(Pos.y-0.2f));
+			}
+		 	else if(Pos.y >= 8.0f && Pos.y < 9.45f){ //Apply Mountain texture
 				outColor = texture(texMountain, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f);
+			}
+		 	else if(Pos.y >= 9.45f && Pos.y < 9.7f){ //Apply Mountain texture
+				outColor = texture(texMountain, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * (1-(4 *(Pos.y-9.45f)));
+				outColor +=  vec4(shade[0],shade[1],shade[2],1.0f)* vec4(1.0f, 1.0f, 1.0f, 1.0f) * 4 *(Pos.y-9.45f);
+			}
+		 	else if(Pos.y >= 7.9f && Pos.y < 8.0f){ //Apply Grass-to-Mountain
+				outColor = texture(texMountain, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * (10*(Pos.y-7.9f));
+				outColor += texture(texGrass, texCoord) * shadeNoSpec * (1-(10*(Pos.y-7.9f)));
 			}
 			else if(Pos.y >= 9.0f){ // Apply snow to mountain peaks
  				outColor =  vec4(shade[0],shade[1],shade[2],1.0f)* vec4(1.0f, 1.0f, 1.0f, 1.0f);
