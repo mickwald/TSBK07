@@ -12,7 +12,16 @@
 #include "init.h"
 #include "projectio.h"
 
-
+struct drawObject {
+	Model *m
+	string texName;
+	GLuint texNum;
+	mat4 trans;
+	mat4 rot;
+	mat4 scale;
+	GLuint shader;
+	mat4 objectTransform;
+};
 
 float sphereSpeed;
 
