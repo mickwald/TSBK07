@@ -1,5 +1,8 @@
 #include "MicroGlut.h"
 #include "VectorUtils3.h"
+#include "GL_utilities.h"
+#include "loadobj.h"
+#include "LoadTGA.h"
 
 void init(void)
 {
@@ -8,6 +11,8 @@ void init(void)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
+
+	Model *m, *tm, *skybox;
 
 	m = LoadModelPlus("webtrcc.obj");
 	skyBox = LoadModelPlus("skybox.obj");
