@@ -120,7 +120,7 @@ Model* GenerateTerrain(TextureData *tex)
 				normalArray[(0 + 0 * tex->width)*3 + 1] = temp.y;	//N_y
 				normalArray[(0 + 0 * tex->width)*3 + 2] = temp.z;	//N_z
 			}
-			// Texture coordinates. 
+			// Texture coordinates.
 			texCoordArray[(x + z * tex->width)*2 + 0] = x; // (float)x / tex->width;
 			texCoordArray[(x + z * tex->width)*2 + 1] = z; // (float)z / tex->height;
 		}
@@ -159,7 +159,7 @@ Model* GenerateTerrain(TextureData *tex)
 //INIT Starts here
 void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed)
 {
-	
+
 	printError("init start");
 	// GL inits
 	glClearColor(0.8,0.8,0.8,0);
@@ -168,6 +168,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	printError("GL inits");
 	*sphereModel = LoadModelPlus("webtrcc.obj");
 	*skyBox = LoadModelPlus("skybox.obj");
+
 
 	*projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
 
@@ -204,7 +205,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	skyBoxTransform->m[11] = 0;
 
 	LoadTGATextureData("fft-terrain.tga", ttex);
-	*tm = GenerateTerrain(ttex);	
+	*tm = GenerateTerrain(ttex);
 	//If done above Texture data load 0 generate terrain, causes graphical errors in edges ???
 	LoadTGATextureSimple("rock_02_dif.tga", texMountain);
 	LoadTGATextureSimple("rock_02_dif.tga", texLake);

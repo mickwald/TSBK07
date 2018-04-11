@@ -30,6 +30,7 @@ struct objectList {
 
 struct objectList objectList; 
 
+
 float sphereSpeed;
 
 // vertex array object
@@ -55,7 +56,7 @@ void drawSkybox(){
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	
+
 	trans = T(0.0f, -0.1f, 0.0f);
 	rot = Ry(0);
 	total = Mult(rot, trans);
@@ -129,9 +130,9 @@ void display(void)
 	mat4 total, modelView;
 
 	printError("pre display");
-	
+
 	glUseProgram(program);
-	
+
 	// Build matrix
 
 	modelView = IdentityMatrix();
@@ -170,15 +171,15 @@ void display(void)
 	mat4 scale = S(1.0f,1.0f,1.0f);
 	total = Mult(trans,scale);
 	total = Mult(rot, total);
-	
+
 	total.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
-	
+
 	mat4 complete = Mult(camMatrix,Mult(total,sphereTransform));
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
 	glUniform1i(glGetUniformLocation(program, "color"), true);
-	
+
 	DrawModel(sphereModel, program, "inPosition", "inNormal", "inTexCoord");
-	
+
 	glutSwapBuffers();
 }
 
