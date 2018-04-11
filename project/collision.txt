@@ -1,0 +1,48 @@
+Pseudokod för collision detection
+
+Antaganden:
+alla colliders är strikt AABB eller strikt sfärer.
+har en lista med alla colliders
+
+kod:
+bool checkCollision(obj o){
+  list colliders;
+  list inFrustum;
+  //Frustum culling
+  for (elem e in colliders){
+    if(e inside frustum)
+    {
+      inFrustum.add(e);
+    }
+  }
+  //Broad phase
+  if(inFrustum is empty)
+    return false;
+  list narrowList;
+  if(e.type == sphere){
+    for(elem f in inFrustum){
+      //check if objects are close
+      int d_z = pow((o.z-f.z),2);
+      int d_y = pow((o.y-f.y),2);
+      int d_z = pow((o.z-f.z),2);
+      int d = sqrt(d_x + d_y + d_z);
+      if(d <= ArrbitraryNumber){
+      //check in narrow phase
+      narrowList.add(f);
+      }
+    }
+  }
+    }
+  //Narrow phase
+  if(narrowList is empty)
+    return false;
+  for(elem g in narrowList){
+    int d_z = pow((o.z-f.z),2);
+    int d_y = pow((o.y-f.y),2);
+    int d_z = pow((o.z-f.z),2);
+    int d = sqrt(d_x + d_y + d_z);
+    if(d <= (o.rad + g.rad)){
+      return true;
+    }
+  }
+}
