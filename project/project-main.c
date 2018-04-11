@@ -19,8 +19,9 @@ struct drawObject {
 	mat4 trans;
 	mat4 rot;
 	mat4 scale;
-	GLuint shader;
+	GLuint shaderprogram;
 	mat4 objectTransform;
+	struct Collider col;
 };
 
 struct objectList {
