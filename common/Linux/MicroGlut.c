@@ -465,7 +465,6 @@ void glutMainLoop()
       {
          XEvent event;
          XNextEvent(dpy, &event);
-
          switch (event.type)
          {
          	case ClientMessage:
