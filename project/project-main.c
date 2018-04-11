@@ -13,8 +13,8 @@
 #include "projectio.h"
 
 struct drawObject {
-	Model *m
-	string texName;
+	Model *m;
+	char texName[32];
 	GLuint texNum;
 	mat4 trans;
 	mat4 rot;
@@ -22,6 +22,13 @@ struct drawObject {
 	GLuint shader;
 	mat4 objectTransform;
 };
+
+struct objectList {
+	struct drawObject o;
+	struct objectList* next;
+};
+
+struct objectList objectList; 
 
 float sphereSpeed;
 
