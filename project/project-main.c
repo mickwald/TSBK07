@@ -11,8 +11,9 @@
 
 #include "init.h"
 #include "projectio.h"
+#include "collision.h"
 
-struct drawObject {
+typedef struct drawObject {
 	Model *m;
 	char texName[32];
 	GLuint texNum;
@@ -22,14 +23,14 @@ struct drawObject {
 	GLuint shaderprogram;
 	mat4 objectTransform;
 	struct Collider col;
-};
+} drawObject;
 
-struct objectList {
+typedef struct objectList {
 	struct drawObject o;
 	struct objectList* next;
-};
+} objectList ;
 
-struct objectList objectList; 
+objectList obList;
 
 
 float sphereSpeed;
@@ -116,7 +117,8 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 			printf("X_in: %f, Z_in: %f\n", in_x, in_z);
 			printf("X: %f, Z: %f, res: %f\n", quad_x, quad_z, res);
 		}
-		return res + 1.0f;
+		float sphereOffset = 1.0f;
+		return res + sphereOffset;
 	}
 }
 
