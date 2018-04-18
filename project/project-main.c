@@ -34,7 +34,7 @@ typedef struct objectList {
 	struct objectList* next;
 } objectList ;
 
-objectList obList;
+objectList objList;
 
 
 float sphereSpeed;
@@ -165,12 +165,24 @@ void display(void)
 	glUniform1i(glGetUniformLocation(skyboxprogram, "skyboxTex"), 5); // Texture unit 5
 	glActiveTexture(GL_TEXTURE0);
 
-
+	
 	//Draw World
+	//mat4 worldMatrix = IdentityMatrix();
+	//glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, worldMatrix.m);
 	glUniform1i(glGetUniformLocation(program, "color"), false);
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
 
 	printError("display 2");
+
+	//Draw ObjList
+	while(true){
+		objList.o.objectTransform.m[7] = calcHeight(objList.o.objectTransform.m[3], objList.o.objectTransform.m[11], ttex.width, tm->vertexArray);
+		mat4 tmp = Mult(camMatrix, Mult(Mult(rot, Mult(objList.o.trans, objList.o.scale)), objList.o.objectTransform));
+		glUniformMatrix4fv(glGetUniformLocation(objList.o.shaderprogram, "mdlMatrix"), 1, GL_TRUE, tmp.m);
+		glUniform1i(glGetUniformLocation(objList.o.shaderprogram, "color"), true);
+		DrawModel(objList.o.m, objList.o.shaderprogram, "inPosition", "inNormal", "inTexCoord");
+		break;
+	}
 
 	//Draw sphere
 	mat4 trans = T(0.0f, 0.0f, 0.0f);
@@ -190,34 +202,45 @@ void display(void)
 	glutSwapBuffers();
 }
 
+
+void createSphere(){
+	drawObject tmp;
+	tmp.m = LoadModelPlus("webtrcc.obj");
+	tmp.texName = "rock_01_dif.tga";
+	tmp.texNum = 10;
+	tmp.trans = IdentityMatrix();
+	tmp.rot = IdentityMatrix();
+	tmp.scale = IdentityMatrix();
+	tmp.shaderprogram = program;
+	tmp.objectTransform = IdentityMatrix();
+	tmp.objectTransform = Mult(tmp.objectTransform, T(50.0f, 0.0f, 50.0f));
+	//tmp->col = NULL;
+	objectList tmplist;
+	/*objectList objtemp = objList;
+	while(objtemp.next != NULL){
+		objtemp = objtemp.next;
+	}*/
+	tmplist.o = tmp;
+	tmplist.next = NULL;
+	objList = tmplist;
+}
+
+
+int loops = 0;
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
 	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix);
+	if(t==0) loops++;
+	if(loops == 30 && t==0){
+		createSphere();
+	}
 	glutPostRedisplay();
 }
 
 void mouse(int x, int y)
 {
 	//printf("%d %d\n", x, y);
-}
-
-void createSphere(){
-	drawObject *tmp;
-	tmp->m = LoadModelPlus("webtrcc.obj");
-	tmp->texName = "rock_01_dif.tga";
-	tmp->texNum = 10;
-	tmp->trans = IdentityMatrix();
-	tmp->rot = IdentityMatrix();
-	tmp->scale = IdentityMatrix();
-	tmp->shaderprogram = program;
-	tmp->objectTransform = IdentityMatrix();
-	tmp->objectTransform = Mult(tmp->objectTransform, T(10.0f, 0.0f, 10.0f));
-	//tmp->col = NULL;
-	objectList *tmplist;
-	tmplist->o = *tmp;
-	tmplist->next = NULL;
-	obList = *tmplist;
 }
 
 int main(int argc, char **argv)
