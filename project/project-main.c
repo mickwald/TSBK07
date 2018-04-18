@@ -12,10 +12,14 @@
 #include "init.h"
 #include "projectio.h"
 #include "collision.h"
+#define __debug__ 0
+#if !defined __debug__
+	#define __debug__ 1
+#endif
 
 typedef struct drawObject {
 	Model *m;
-	char texName[32];
+	char *texName;
 	GLuint texNum;
 	mat4 trans;
 	mat4 rot;
@@ -98,7 +102,7 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 		n = CrossProduct(ox,oz);
 		d = -(n.x*x + n.y*y_o + n.z*z);
 		res = (-d -n.x*in_x-n.z*in_z)/n.y;
-		if(t == -10){
+		if(__debug__ && !t){
 			printf("X_in: %f, Z_in: %f\n", in_x, in_z);
 			printf("X: %f, Z: %f, res: %f\n", quad_x, quad_z, res);
 		}
@@ -113,7 +117,7 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 		n = CrossProduct(xz_x,xz_z);
 		d = -(n.x*(x+1) + n.y*y_xz + n.z*(z+1));
 		res = (-d -n.x*in_x-n.z*in_z)/n.y;
-		if(t == -10){
+		if(__debug__ && !t){
 			printf("X_in: %f, Z_in: %f\n", in_x, in_z);
 			printf("X: %f, Z: %f, res: %f\n", quad_x, quad_z, res);
 		}
@@ -175,7 +179,7 @@ void display(void)
 	total = Mult(trans,scale);
 	total = Mult(rot, total);
 
-	total.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
+	sphereTransform.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
 
 	mat4 complete = Mult(camMatrix,Mult(total,sphereTransform));
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
@@ -196,6 +200,24 @@ void timer(int i)
 void mouse(int x, int y)
 {
 	//printf("%d %d\n", x, y);
+}
+
+void createSphere(){
+	drawObject *tmp;
+	tmp->m = LoadModelPlus("webtrcc.obj");
+	tmp->texName = "rock_01_dif.tga";
+	tmp->texNum = 10;
+	tmp->trans = IdentityMatrix();
+	tmp->rot = IdentityMatrix();
+	tmp->scale = IdentityMatrix();
+	tmp->shaderprogram = program;
+	tmp->objectTransform = IdentityMatrix();
+	tmp->objectTransform = Mult(tmp->objectTransform, T(10.0f, 0.0f, 10.0f));
+	//tmp->col = NULL;
+	objectList *tmplist;
+	tmplist->o = *tmp;
+	tmplist->next = NULL;
+	obList = *tmplist;
 }
 
 int main(int argc, char **argv)
