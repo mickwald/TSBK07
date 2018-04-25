@@ -12,24 +12,7 @@
 #include "init.h"
 #include "projectio.h"
 
-struct drawObject {
-	Model *m;
-	char texName[32];
-	GLuint texNum;
-	mat4 trans;
-	mat4 rot;
-	mat4 scale;
-	GLuint shaderprogram;
-	mat4 objectTransform;
-	struct Collider col;
-};
 
-struct objectList {
-	struct drawObject o;
-	struct objectList* next;
-};
-
-struct objectList objectList; 
 
 
 float sphereSpeed;
@@ -120,6 +103,62 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 	}
 }
 
+vec3 calcSlope(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
+	//vec3 spherePos = SetVector(sphereTransform[3],sphereTransform[7],sphereTransform[11]);
+	int x, z;
+	vec3 n;
+	x = (int) floor(in_x);
+	z = (int) floor(in_z);
+	float quad_x = in_x - x;
+	float quad_z = in_z - z;
+	GLfloat y_o, y_x, y_z, y_xz;
+
+	if(quad_x + quad_z <= 1){	//Near triangle in quad
+		y_o = vertex[(x + z * zLen)*3 + 1];
+		y_x = vertex[((x+1) + z * zLen)*3 + 1];
+		y_z = vertex[(x + (z+1) * zLen)*3 + 1];
+		vec3 ox, oz;
+		ox = SetVector(1,y_x-y_o,0);
+		oz = SetVector(0,y_z-y_o,1);
+		n = CrossProduct(ox,oz);
+
+		return  n;
+	} else {			//Far triangle in quad
+		y_xz = vertex[((x+1) + (z+1) * zLen)*3 + 1];
+		y_x = vertex[((x+1) + z * zLen)*3 + 1];
+		y_z = vertex[(x + (z+1) * zLen)*3 + 1];
+		vec3 xz_x, xz_z;
+		xz_x = SetVector(1-1,y_x-y_xz,0-1);
+		xz_z = SetVector(0-1,y_z-y_xz,1-1);
+		n = CrossProduct(xz_z, xz_x);
+
+		return n;
+	}
+}
+
+mat4 calcSlopeRotMat(){
+	vec3 tSlope = calcSlope(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
+	tSlope = ScalarMult(Normalize(tSlope),-1);
+	vec3 x_Hat = SetVector(1.0f,0.0f, 0.0f);
+	vec3 zVec = Normalize(CrossProduct(x_Hat, tSlope));
+	vec3 xVec = Normalize(CrossProduct(tSlope,zVec));
+
+	mat4 slopeRotMat = IdentityMatrix();
+
+	//radvis
+	slopeRotMat.m[0] = xVec.x;
+	slopeRotMat.m[1] = tSlope.x;
+	slopeRotMat.m[2] = zVec.x;
+	slopeRotMat.m[4] = xVec.y;
+	slopeRotMat.m[5] = tSlope.y;
+	slopeRotMat.m[6] = zVec.y;
+	slopeRotMat.m[8] = xVec.z;
+	slopeRotMat.m[9] = tSlope.z;
+	slopeRotMat.m[10] = zVec.z;
+
+	return slopeRotMat;
+
+}
 
 void display(void)
 {
@@ -158,24 +197,26 @@ void display(void)
 	glBindTexture(GL_TEXTURE_2D, skyboxTex);
 	glUniform1i(glGetUniformLocation(skyboxprogram, "skyboxTex"), 5); // Texture unit 5
 	glActiveTexture(GL_TEXTURE0);
-
-
-	//Draw World
 	glUniform1i(glGetUniformLocation(program, "color"), false);
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
 
 	printError("display 2");
 
 	//Draw sphere
+	mat4 slopeRotMat = calcSlopeRotMat();
+
 	mat4 trans = T(0.0f, 0.0f, 0.0f);
 	mat4 rot = Ry(0);
 	mat4 scale = S(1.0f,1.0f,1.0f);
 	total = Mult(trans,scale);
 	total = Mult(rot, total);
 
-	total.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
+	sphereTransform.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
 
-	mat4 complete = Mult(camMatrix,Mult(total,sphereTransform));
+
+
+
+	mat4 complete = Mult(camMatrix,Mult(total,Mult(sphereTransform,slopeRotMat)));
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
 	glUniform1i(glGetUniformLocation(program, "color"), true);
 
@@ -201,7 +242,7 @@ int main(int argc, char **argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
-	glutInitWindowSize (1024, 768);
+	glutInitWindowSize (600, 600);
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
 	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed);
