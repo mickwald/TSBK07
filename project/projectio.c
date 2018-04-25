@@ -2,7 +2,50 @@
 #include "VectorUtils3.h"
 #include "GL_utilities.h"
 
+int prevX = 0;
+int prevY = 0;
+float dX = 0;
+float dY = 0;
+int down = 0;
+int mouseMoved = 0;
+void mouse(int x, int y){
+	dX = x - prevX;
+	dY = y - prevY;
+
+	prevX = x;
+	prevY = y;
+	//printf("X: %d PrevX: %d dX: %f Y: %d PrevY: %d dY: %f\n", x, prevX, dX, y, prevY, dY);
+	//printf("dX: %d dY: %d\n", dX, dY);
+}
+void mouseDown(int button, int state, int x, int y)
+{
+	if (state == GLUT_DOWN)
+	{
+		down = 1;
+	}
+	if(state == GLUT_UP){
+		down = 0;
+	}
+}
+
+
 void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix){
+
+	//Check mouse input
+	glutMouseFunc(mouseDown);
+
+	if(down == 1){
+
+		if((*t%2) == 0){
+			//printf("X: %d PrevX: %d dX: %d Y: %d PrevY: %d dY: %d\n", x, prevX, dX, y, prevY, dY);
+			printf("dX: %f dY: %f\n", dX, dY);
+		}
+
+		dX = 0;
+		dY = 0;
+	}
+
+	//Check keyboard input
 	if(glutKeyIsDown('w')){
 		*camMatrix = Mult(*camMatrix, T(-0.4f*camMatrix->m[2],0,0.4f*camMatrix->m[0]));
 	}

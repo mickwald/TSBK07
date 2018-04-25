@@ -284,7 +284,6 @@ void createSphere(){
 	objList = tmplist;
 }
 
-
 int loops = 0;
 void timer(int i)
 {
@@ -297,10 +296,6 @@ void timer(int i)
 	glutPostRedisplay();
 }
 
-void mouse(int x, int y)
-{
-	//printf("%d %d\n", x, y);
-}
 
 int main(int argc, char **argv)
 {
