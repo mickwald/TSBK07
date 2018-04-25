@@ -206,11 +206,6 @@ void timer(int i)
 	glutPostRedisplay();
 }
 
-void mouse(int x, int y)
-{
-	//printf("%d %d\n", x, y);
-}
-
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
