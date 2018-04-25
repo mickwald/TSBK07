@@ -11,31 +11,15 @@
 
 #include "init.h"
 #include "projectio.h"
-#include "collision.h"
 #define __debug__ 0
 #if !defined __debug__
 	#define __debug__ 1
 #endif
 
-typedef struct drawObject {
-	Model *m;
-	char *texName;
-	GLuint texNum;
-	mat4 trans;
-	mat4 rot;
-	mat4 scale;
-	GLuint shaderprogram;
-	mat4 objectTransform;
-	struct Collider col;
-} drawObject;
 
-typedef struct objectList {
-	struct drawObject o;
-	struct objectList* next;
-} objectList ;
 
-objectList objList;
-
+drawObject *drawObjects;
+int drawArraySize;
 
 float sphereSpeed;
 
@@ -135,9 +119,7 @@ void display(void)
 	//Skybox
 	drawSkybox();
 	mat4 total, modelView;
-
 	printError("pre display");
-
 	glUseProgram(program);
 
 	// Build matrix
@@ -174,15 +156,8 @@ void display(void)
 
 	printError("display 2");
 
-	//Draw ObjList
-	while(true){
-		objList.o.objectTransform.m[7] = calcHeight(objList.o.objectTransform.m[3], objList.o.objectTransform.m[11], ttex.width, tm->vertexArray);
-		mat4 tmp = Mult(camMatrix, Mult(Mult(rot, Mult(objList.o.trans, objList.o.scale)), objList.o.objectTransform));
-		glUniformMatrix4fv(glGetUniformLocation(objList.o.shaderprogram, "mdlMatrix"), 1, GL_TRUE, tmp.m);
-		glUniform1i(glGetUniformLocation(objList.o.shaderprogram, "color"), true);
-		DrawModel(objList.o.m, objList.o.shaderprogram, "inPosition", "inNormal", "inTexCoord");
-		break;
-	}
+	//Draw drawObjects
+	//here
 
 	//Draw sphere
 	mat4 trans = T(0.0f, 0.0f, 0.0f);
@@ -203,6 +178,7 @@ void display(void)
 }
 
 
+int loops = 0;
 void createSphere(){
 	drawObject tmp;
 	tmp.m = LoadModelPlus("webtrcc.obj");
@@ -213,27 +189,19 @@ void createSphere(){
 	tmp.scale = IdentityMatrix();
 	tmp.shaderprogram = program;
 	tmp.objectTransform = IdentityMatrix();
-	tmp.objectTransform = Mult(tmp.objectTransform, T(50.0f, 0.0f, 50.0f));
+	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f, 50.0f));
 	//tmp->col = NULL;
-	objectList tmplist;
-	/*objectList objtemp = objList;
-	while(objtemp.next != NULL){
-		objtemp = objtemp.next;
-	}*/
-	tmplist.o = tmp;
-	tmplist.next = NULL;
-	objList = tmplist;
 }
 
 
-int loops = 0;
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
 	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix);
 	if(t==0) loops++;
-	if(loops == 30 && t==0){
+	if(loops % 60 == 30 && t==0){
 		createSphere();
+		loops = 0;
 	}
 	glutPostRedisplay();
 }
@@ -251,7 +219,7 @@ int main(int argc, char **argv)
 	glutInitWindowSize (1024, 768);
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
-	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed);
+	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArraySize);
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
 	glutMainLoop();

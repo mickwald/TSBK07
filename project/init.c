@@ -4,6 +4,20 @@
 #include "loadobj.h"
 #include "LoadTGA.h"
 
+static const int initialArraySize = 64;
+
+typedef struct drawObject {
+	Model *m;
+	char *texName;
+	GLuint texNum;
+	mat4 trans;
+	mat4 rot;
+	mat4 scale;
+	GLuint shaderprogram;
+	mat4 objectTransform;
+	//Collider col;
+} drawObject;
+
 //Light definitions
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
@@ -157,7 +171,7 @@ Model* GenerateTerrain(TextureData *tex)
 
 
 //INIT Starts here
-void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed)
+void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArraySize)
 {
 
 	printError("init start");
@@ -172,6 +186,10 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 
 	*projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
 
+	//drawObjectsArray init
+	drawObjects = malloc(sizeof(drawObject)*initialArraySize);
+	drawObjectsArraySize = 0;
+	
 	// Load and compile shader
 	*program = loadShaders("world.vert", "world.frag");
 	*skyboxprogram = loadShaders("skybox.vert", "skybox.frag");
