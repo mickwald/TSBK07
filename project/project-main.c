@@ -205,7 +205,6 @@ void timer(int i)
 	}
 	glutPostRedisplay();
 }
-
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
@@ -216,7 +215,6 @@ int main(int argc, char **argv)
 	glutDisplayFunc(display);
 	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArraySize);
 	glutTimerFunc(20, &timer, 0);
-	glutPassiveMotionFunc(mouse);
 	glutMainLoop();
 	exit(0);
 }
