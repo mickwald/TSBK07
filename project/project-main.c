@@ -148,7 +148,7 @@ void display(void)
 	glUniform1i(glGetUniformLocation(skyboxprogram, "skyboxTex"), 5); // Texture unit 5
 	glActiveTexture(GL_TEXTURE0);
 
-	
+
 	//Draw World
 	//mat4 worldMatrix = IdentityMatrix();
 	//glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, worldMatrix.m);
@@ -222,6 +222,8 @@ void timer(int i)
 	}
 	glutPostRedisplay();
 }
+
+
 int main(int argc, char **argv)
 {
 	glutInit(&argc, argv);
@@ -232,6 +234,7 @@ int main(int argc, char **argv)
 	glutDisplayFunc(display);
 	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize);
 	glutTimerFunc(20, &timer, 0);
+	glutPassiveMotionFunc(mouse);
 	glutMainLoop();
 	exit(0);
 }
