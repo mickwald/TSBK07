@@ -111,6 +111,66 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 	}
 }
 
+vec3 calcSlope(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
+	//vec3 spherePos = SetVector(sphereTransform[3],sphereTransform[7],sphereTransform[11]);
+	int x, z;
+	if(__debug__ && !t){
+		printf("X_in: %f, Z_in: %f\n", in_x, in_z);
+	}
+	vec3 n;
+	x = (int) floor(in_x);
+	z = (int) floor(in_z);
+	float quad_x = in_x - x;
+	float quad_z = in_z - z;
+	GLfloat y_o, y_x, y_z, y_xz;
+
+	if(quad_x + quad_z <= 1){	//Near triangle in quad
+		y_o = vertex[(x + z * zLen)*3 + 1];
+		y_x = vertex[((x+1) + z * zLen)*3 + 1];
+		y_z = vertex[(x + (z+1) * zLen)*3 + 1];
+		vec3 ox, oz;
+		ox = SetVector(1,y_x-y_o,0);
+		oz = SetVector(0,y_z-y_o,1);
+		n = CrossProduct(ox,oz);
+
+		return  n;
+	} else {			//Far triangle in quad
+		y_xz = vertex[((x+1) + (z+1) * zLen)*3 + 1];
+		y_x = vertex[((x+1) + z * zLen)*3 + 1];
+		y_z = vertex[(x + (z+1) * zLen)*3 + 1];
+		vec3 xz_x, xz_z;
+		xz_x = SetVector(1-1,y_x-y_xz,0-1);
+		xz_z = SetVector(0-1,y_z-y_xz,1-1);
+		n = CrossProduct(xz_z, xz_x);
+
+		return n;
+	}
+}
+
+mat4 calcSlopeRotMat(){
+	vec3 tSlope = calcSlope(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
+	tSlope = ScalarMult(Normalize(tSlope),-1);
+	vec3 x_Hat = SetVector(1.0f,0.0f, 0.0f);
+	vec3 zVec = Normalize(CrossProduct(x_Hat, tSlope));
+	vec3 xVec = Normalize(CrossProduct(tSlope,zVec));
+
+	mat4 slopeRotMat = IdentityMatrix();
+
+	//radvis
+	slopeRotMat.m[0] = xVec.x;
+	slopeRotMat.m[1] = tSlope.x;
+	slopeRotMat.m[2] = zVec.x;
+	slopeRotMat.m[4] = xVec.y;
+	slopeRotMat.m[5] = tSlope.y;
+	slopeRotMat.m[6] = zVec.y;
+	slopeRotMat.m[8] = xVec.z;
+	slopeRotMat.m[9] = tSlope.z;
+	slopeRotMat.m[10] = zVec.z;
+
+	return slopeRotMat;
+
+}
+
 
 void display(void)
 {
@@ -161,14 +221,18 @@ void display(void)
 	int i;
 	while(i < drawArrayElements){
 		drawObjects[i].objectTransform.m[7] = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
-		mat4 tmp = Mult(camMatrix, Mult(Mult(drawObjects[i].rot, Mult(drawObjects[i].trans, drawObjects[i].scale)), drawObjects[i].objectTransform));
-		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, tmp.m);
+		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
+		model = Mult(drawObjects[i].rot, model);
+		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
+		mat4 modelToView = Mult(camMatrix, modelToWorld);
+		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
 		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
 		DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
 		i++;
 	}
 	i = 0;
 	//Draw sphere
+	mat4 slopeRotMat = calcSlopeRotMat();
 	mat4 trans = T(0.0f, 0.0f, 0.0f);
 	mat4 rot = Ry(0);
 	mat4 scale = S(1.0f,1.0f,1.0f);
@@ -177,7 +241,8 @@ void display(void)
 
 	sphereTransform.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
 
-	mat4 complete = Mult(camMatrix,Mult(total,sphereTransform));
+	mat4 modelToWorld = Mult(sphereTransform,Mult(slopeRotMat,total));
+	mat4 complete = Mult(camMatrix, modelToWorld);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
 	glUniform1i(glGetUniformLocation(program, "color"), true);
 
