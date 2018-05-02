@@ -29,7 +29,7 @@ void mouseDown(int button, int state, int x, int y)
 }
 
 
-void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix){
+void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest){
 
 	//Check mouse input
 	glutMouseFunc(mouseDown);
@@ -41,12 +41,26 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 			//printf("dX: %f dY: %f\n", dX, dY);
 		}
 
-		if(dX > 0){ // move camera right
-			*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
-		}
-		else if(dX < 0){ //move camera left
-			*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
-		}
+			if(*lockCamera == 1){
+				*rotTest -= dX*M_PI/360;
+				//*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
+				vec3 traslation = SetVector(camMatrix->m[3],camMatrix->m[7],camMatrix->m[11]);
+				/*camMatrix->m[3] += sphereTransform->m[3];
+				camMatrix->m[7] += sphereTransform->m[7];
+				camMatrix->m[11] += 	sphereTransform->m[11];
+
+				camMatrix->m[3] = 0;
+				camMatrix->m[7] = 0;
+				camMatrix->m[11] = 	0;
+				*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
+				camMatrix->m[3] = traslation.x;
+				camMatrix->m[7] = traslation.y;
+				camMatrix->m[11] = 	traslation.z;*/
+
+			}
+			else{
+				*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
+			}
 
 		dX = 0;
 		dY = 0;
@@ -110,6 +124,14 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 	}
 	if(glutKeyIsDown('n')){
 		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",sphereTransform->m[0],sphereTransform->m[1],sphereTransform->m[2],sphereTransform->m[3],sphereTransform->m[4],sphereTransform->m[5],sphereTransform->m[6],sphereTransform->m[7],sphereTransform->m[8],sphereTransform->m[9],sphereTransform->m[10],sphereTransform->m[11],sphereTransform->m[12],sphereTransform->m[13],sphereTransform->m[14],sphereTransform->m[15]);
+	}
+	if(glutKeyIsDown('9')){
+		printf("Camera lock is on");
+		*lockCamera = 1;
+	}
+	if(glutKeyIsDown('0')){
+		printf("Camera lock is off");
+		*lockCamera = 0;
 	}
 	if(sphereTransform->m[11] < 0){
 		sphereTransform->m[11] = 0;
