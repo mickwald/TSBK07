@@ -38,7 +38,14 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 
 		if((*t%2) == 0){
 			//printf("X: %d PrevX: %d dX: %d Y: %d PrevY: %d dY: %d\n", x, prevX, dX, y, prevY, dY);
-			printf("dX: %f dY: %f\n", dX, dY);
+			//printf("dX: %f dY: %f\n", dX, dY);
+		}
+
+		if(dX > 0){ // move camera right
+			*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
+		}
+		else if(dX < 0){ //move camera left
+			*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
 		}
 
 		dX = 0;
