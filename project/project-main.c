@@ -24,6 +24,8 @@ int drawArraySize;
 
 float sphereSpeed;
 
+int lockCamera = 0;
+
 // vertex array object
 Model *sphereModel, *tm;
 
@@ -34,11 +36,13 @@ TextureData ttex; // terrain
 int t = 0;
 
 mat4 camMatrix;
-mat4 transform, rot, trans, total, complete, scale;
+mat4 transform, rot, trans, total, complete, scale, sphereModelMat;
 //SKYBOX STUFF!!!
 Model *skyBox;
 GLuint skyboxprogram;
 mat4 skyBoxTransform;
+
+float rotTest = 0;
 
 unsigned int skyboxTex;
 
@@ -234,14 +238,14 @@ void display(void)
 	//Draw sphere
 	mat4 slopeRotMat = calcSlopeRotMat();
 	mat4 trans = T(0.0f, 0.0f, 0.0f);
-	mat4 rot = Ry(0);
+	mat4 rot = Ry(rotTest);
 	mat4 scale = S(1.0f,1.0f,1.0f);
-	total = Mult(trans,scale);
-	total = Mult(rot, total);
+	sphereModelMat = Mult(trans,scale);
+	sphereModelMat = Mult(rot, sphereModelMat);
 
 	sphereTransform.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
 
-	mat4 modelToWorld = Mult(sphereTransform,Mult(slopeRotMat,total));
+	mat4 modelToWorld = Mult(sphereTransform,Mult(slopeRotMat,sphereModelMat));
 	mat4 complete = Mult(camMatrix, modelToWorld);
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
 	glUniform1i(glGetUniformLocation(program, "color"), true);
@@ -282,11 +286,20 @@ void createSphere(){
 	}
 }
 
+void positionCamera(){
+	if(lockCamera == 1){
+		camMatrix.m[3] = sphereTransform.m[3];
+		camMatrix.m[7] = -sphereTransform.m[7] -2.0f;
+		camMatrix.m[11] = sphereTransform.m[11] - 5.0f;
+	}
+
+}
 
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
-	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix);
+	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest);
+	positionCamera();
 	if(t==0) loops++;
 	if(loops % 10 == 0 && t==0){
 		createSphere();
