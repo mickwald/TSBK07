@@ -19,6 +19,7 @@
 
 
 drawObject *drawObjects;
+int drawArrayElements;
 int drawArraySize;
 
 float sphereSpeed;
@@ -215,8 +216,16 @@ void display(void)
 	printError("display 2");
 
 	//Draw drawObjects
-	//here
-
+	int i;
+	while(i < drawArrayElements){
+		drawObjects[i].objectTransform.m[7] = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		mat4 tmp = Mult(camMatrix, Mult(Mult(drawObjects[i].rot, Mult(drawObjects[i].trans, drawObjects[i].scale)), drawObjects[i].objectTransform));
+		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, tmp.m);
+		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
+		DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
+		i++;
+	}
+	i = 0;
 	//Draw sphere
 	mat4 slopeRotMat = calcSlopeRotMat();
 
@@ -251,6 +260,15 @@ void createSphere(){
 	tmp.objectTransform = IdentityMatrix();
 	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f, 50.0f));
 	//tmp->col = NULL;
+	if(drawArrayElements < drawArraySize){
+		printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
+		drawObjects[drawArrayElements++] = tmp;
+		printf("Added object\n");
+	} else {		
+		printf("Size of drawArrayElements: %d\n", drawArrayElements);
+		printf("Can't insert more objects!\n");
+		printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+	}
 }
 
 
@@ -259,9 +277,8 @@ void timer(int i)
 	glutTimerFunc(20, &timer, i);
 	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix);
 	if(t==0) loops++;
-	if(loops % 60 == 30 && t==0){
+	if(loops % 10 == 0 && t==0){
 		createSphere();
-		loops = 0;
 	}
 	glutPostRedisplay();
 }
@@ -275,7 +292,7 @@ int main(int argc, char **argv)
 	glutInitWindowSize (1024, 768);
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
-	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArraySize);
+	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize);
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
 	glutMainLoop();

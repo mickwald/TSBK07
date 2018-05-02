@@ -4,7 +4,7 @@
 #include "loadobj.h"
 #include "LoadTGA.h"
 
-static const int initialArraySize = 64;
+int initialArraySize = 64;
 
 typedef struct drawObject {
 	Model *m;
@@ -171,7 +171,7 @@ Model* GenerateTerrain(TextureData *tex)
 
 
 //INIT Starts here
-void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArraySize)
+void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize)
 {
 
 	printError("init start");
@@ -187,8 +187,9 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	*projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
 
 	//drawObjectsArray init
-	drawObjects = malloc(sizeof(drawObject)*initialArraySize);
-	drawObjectsArraySize = 0;
+	*drawObjects = (struct drawObject*) malloc(sizeof(drawObject)*initialArraySize);
+	*drawObjectsArrayElements = 0;
+	*drawObjectsArraySize = initialArraySize;
 	
 	// Load and compile shader
 	*program = loadShaders("world.vert", "world.frag");
