@@ -190,7 +190,8 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	*drawObjects = (struct drawObject*) malloc(sizeof(drawObject)*initialArraySize);
 	*drawObjectsArrayElements = 0;
 	*drawObjectsArraySize = initialArraySize;
-	
+
+
 	// Load and compile shader
 	*program = loadShaders("world.vert", "world.frag");
 	*skyboxprogram = loadShaders("skybox.vert", "skybox.frag");

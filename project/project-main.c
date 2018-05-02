@@ -265,14 +265,20 @@ void createSphere(){
 	tmp.objectTransform = IdentityMatrix();
 	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f, 50.0f));
 	//tmp->col = NULL;
-	if(drawArrayElements < drawArraySize){
+	if(__debug__ && !t){
 		printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
+	}
+	if(drawArrayElements < drawArraySize){
 		drawObjects[drawArrayElements++] = tmp;
+		if(__debug__ && !t){
 		printf("Added object\n");
-	} else {		
-		printf("Size of drawArrayElements: %d\n", drawArrayElements);
-		printf("Can't insert more objects!\n");
-		printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+		}
+	} else {
+		if(__debug__ && !t){
+			printf("Size of drawArrayElements: %d\n", drawArrayElements);
+			printf("Can't insert more objects!\n");
+			printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+		}
 	}
 }
 
@@ -297,7 +303,9 @@ int main(int argc, char **argv)
 	glutInitWindowSize (1024, 768);
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
+	printf("Loading...\n");
 	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize);
+	printf("Load complete\n");	
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
 	glutMainLoop();
