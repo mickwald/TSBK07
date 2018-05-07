@@ -22,6 +22,7 @@ int drawArraySize;
 float sphereSpeed;
 
 int lockCamera = 0;
+int loops = 0;
 
 // vertex array object
 Model *sphereModel, *tm;
@@ -222,13 +223,18 @@ void display(void)
 	//Draw drawObjects
 	int i;
 	while(i < drawArrayElements){
-		drawObjects[i].objectTransform.m[7] = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		float objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		drawObjects[i].objectTransform.m[7] = objectHeight;
+		drawObjects[i].col.midpoint.y = objectHeight;
 		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
 		model = Mult(drawObjects[i].rot, model);
 		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
 		mat4 modelToView = Mult(camMatrix, modelToWorld);
 		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
-		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
+		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);	
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, drawObjects[i].texNum);
+		glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
 		DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
 		if(i==1){
 			//printf("x: %F y: %f z: %f\n", drawObjects[0].objectTransform.m[3], drawObjects[0].objectTransform.m[7], drawObjects[0].objectTransform.m[11]);
@@ -236,40 +242,46 @@ void display(void)
 		i++;
 	}
 	i = 0;
+
 	//Draw sphere
+	//Get correct texture
+	glActiveTexture(GL_TEXTURE4);
+	glBindTexture(GL_TEXTURE_2D, texSphere);
+	glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
+	//Transformations
 	mat4 slopeRotMat = calcSlopeRotMat();
 	mat4 trans = T(0.0f, 0.0f, 0.0f);
 	mat4 rot = Ry(rotTest);
 	mat4 scale = S(1.0f,1.0f,1.0f);
 	sphereModelMat = Mult(trans,scale);
 	sphereModelMat = Mult(rot, sphereModelMat);
-
+	//Set Height
 	sphereTransform.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
-
+	
 	mat4 modelToWorld = Mult(sphereTransform,Mult(slopeRotMat,sphereModelMat));
 	mat4 complete = Mult(camMatrix, modelToWorld);
+	//Upload
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
 	glUniform1i(glGetUniformLocation(program, "color"), true);
-
+	//Draw
 	DrawModel(sphereModel, program, "inPosition", "inNormal", "inTexCoord");
 
 	glutSwapBuffers();
 }
 
 
-
-int loops = 0;
 void createSphere(){
 	drawObject tmp;
 	tmp.m = LoadModelPlus("webtrcc.obj");
 	tmp.texName = "rock_01_dif.tga";
-	tmp.texNum = 10;
 	tmp.trans = IdentityMatrix();
 	tmp.rot = IdentityMatrix();
 	tmp.scale = IdentityMatrix();
 	tmp.shaderprogram = program;
 	tmp.objectTransform = IdentityMatrix();
-	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f, 50.0f));
+	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f,10.0f));
+	//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11], 
+	LoadTGATextureSimple(tmp.texName, &tmp.texNum);
 	vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
 	Collider tmpCol = makeSphereCollider(midP, 1.0f);
 	tmp.col = tmpCol;
