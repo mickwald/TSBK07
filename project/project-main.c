@@ -12,9 +12,6 @@
 #include "init.h"
 #include "projectio.h"
 #define __debug__ 0
-#if !defined __debug__
-	#define __debug__ 1
-#endif
 
 
 

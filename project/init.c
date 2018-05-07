@@ -3,6 +3,8 @@
 #include "GL_utilities.h"
 #include "loadobj.h"
 #include "LoadTGA.h"
+#include "collision.h"
+
 
 int initialArraySize = 64;
 
@@ -15,7 +17,7 @@ typedef struct drawObject {
 	mat4 scale;
 	GLuint shaderprogram;
 	mat4 objectTransform;
-	//Collider col;
+	Collider col;
 } drawObject;
 
 //Light definitions
