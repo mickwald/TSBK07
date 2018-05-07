@@ -221,11 +221,12 @@ void display(void)
 	printError("display 2");
 
 	//Draw drawObjects
-	int i;
+	int i = 0;
 	while(i < drawArrayElements){
-		drawObjects[i].objectTransform.m[7] = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		GLfloat objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		drawObjects[i].objectTransform.m[7] = objectHeight;
 		//drawObjects[i].objectTransform.m[7] = objectHeight;
-		//drawObjects[i].col.midPoint.y = objectHeight;
+		drawObjects[i].col.midPoint.y = objectHeight;
 		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
 		model = Mult(drawObjects[i].rot, model);
 		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
@@ -235,6 +236,7 @@ void display(void)
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, drawObjects[i].texNum);
 		glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
+		//printf("Drawing item %d.\n", i);
 		DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
 		if(i==1){
 			//printf("x: %F y: %f z: %f\n", drawObjects[0].objectTransform.m[3], drawObjects[0].objectTransform.m[7], drawObjects[0].objectTransform.m[11]);
@@ -271,33 +273,36 @@ void display(void)
 
 
 void createSphere(){
-	drawObject tmp;
-	tmp.m = LoadModelPlus("webtrcc.obj");
-	tmp.texName = "rock_01_dif.tga";
-	tmp.trans = IdentityMatrix();
-	tmp.rot = IdentityMatrix();
-	tmp.scale = IdentityMatrix();
-	tmp.shaderprogram = program;
-	tmp.objectTransform = IdentityMatrix();
-	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f,10.0f));
-	//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
-	LoadTGATextureSimple(tmp.texName, &tmp.texNum);
-	vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
-	Collider tmpCol = makeSphereCollider(midP, 1.0f);
-	tmp.col = tmpCol;
-	if(__debug__ && !t){
-		printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
-	}
-	if(drawArrayElements < drawArraySize){
-		drawObjects[drawArrayElements++] = tmp;
+
+	if( drawArrayElements < drawArraySize){
+		drawObject tmp;
+		tmp.m = LoadModelPlus("webtrcc.obj");
+		tmp.texName = "rock_01_dif.tga";
+		tmp.trans = IdentityMatrix();
+		tmp.rot = IdentityMatrix();
+		tmp.scale = IdentityMatrix();
+		tmp.shaderprogram = program;
+		tmp.objectTransform = IdentityMatrix();
+		tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f,10.0f));
+		//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
+		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
+		vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
+		Collider tmpCol = makeSphereCollider(midP, 1.0f);
+		tmp.col = tmpCol;
 		if(__debug__ && !t){
-		printf("Added object\n");
+			printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
 		}
-	} else {
-		if(__debug__ && !t){
-			printf("Size of drawArrayElements: %d\n", drawArrayElements);
-			printf("Can't insert more objects!\n");
-			printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+		if(drawArrayElements < drawArraySize){
+			drawObjects[drawArrayElements++] = tmp;
+			if(__debug__ && !t){
+				printf("Added object\n");
+			}
+		} else {
+			if(__debug__ && !t){
+				printf("Size of drawArrayElements: %d\n", drawArrayElements);
+				printf("Can't insert more objects!\n");
+				printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+			}
 		}
 	}
 }
