@@ -223,9 +223,9 @@ void display(void)
 	//Draw drawObjects
 	int i;
 	while(i < drawArrayElements){
-		float objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
-		drawObjects[i].objectTransform.m[7] = objectHeight;
-		drawObjects[i].col.midpoint.y = objectHeight;
+		drawObjects[i].objectTransform.m[7] = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		//drawObjects[i].objectTransform.m[7] = objectHeight;
+		//drawObjects[i].col.midPoint.y = objectHeight;
 		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
 		model = Mult(drawObjects[i].rot, model);
 		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
