@@ -182,7 +182,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
-	*sphereModel = LoadModelPlus("bunnyplus.obj");
+	*sphereModel = LoadModelPlus("webtrcc.obj");
 	*skyBox = LoadModelPlus("skybox.obj");
 
 
