@@ -204,7 +204,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	printError("init shader");
 
 	*sphereTransform = IdentityMatrix();
-	*sphereSpeed = 0.5f;
+	*sphereSpeed = 0.2f;
 
 	glUniformMatrix4fv(glGetUniformLocation(*program, "projMatrix"), 1, GL_TRUE, projectionMatrix->m);
 

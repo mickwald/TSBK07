@@ -221,11 +221,12 @@ void display(void)
 	printError("display 2");
 
 	//Draw drawObjects
-	int i;
+	int i = 0;
 	while(i < drawArrayElements){
-		drawObjects[i].objectTransform.m[7] = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		GLfloat objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		drawObjects[i].objectTransform.m[7] = objectHeight;
 		//drawObjects[i].objectTransform.m[7] = objectHeight;
-		//drawObjects[i].col.midPoint.y = objectHeight;
+		drawObjects[i].col.midPoint.y = objectHeight;
 		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
 		model = Mult(drawObjects[i].rot, model);
 		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
