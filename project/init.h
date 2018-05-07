@@ -1,3 +1,6 @@
+#ifndef _INIT_
+#define _INIT_
+
 #include "loadobj.h"
 #include "collision.h"
 
@@ -14,3 +17,5 @@ typedef struct drawObject {
 } drawObject;
 
 void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol);
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef _COLLISION_
+#define _COLLISION_
+
 #include "MicroGlut.h"
 #include "VectorUtils3.h"
 #include "GL_utilities.h"
@@ -16,3 +19,5 @@ typedef struct ColliderList ColliderList;
 
 bool checkCollision(Collider c, Collider c2);
 Collider makeSphereCollider(vec3 midP, GLfloat rad);
+
+#endif

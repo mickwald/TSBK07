@@ -6,7 +6,7 @@
 #include "collision.h"
 
 
-int initialArraySize = 64;
+int initialArraySize = 3;
 
 typedef struct drawObject {
 	Model *m;

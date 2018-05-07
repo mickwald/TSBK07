@@ -231,7 +231,7 @@ void display(void)
 		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
 		mat4 modelToView = Mult(camMatrix, modelToWorld);
 		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
-		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);	
+		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
 		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, drawObjects[i].texNum);
 		glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
@@ -257,7 +257,7 @@ void display(void)
 	sphereModelMat = Mult(rot, sphereModelMat);
 	//Set Height
 	sphereTransform.m[7] = calcHeight(sphereTransform.m[3], sphereTransform.m[11], ttex.width, tm->vertexArray);
-	
+
 	mat4 modelToWorld = Mult(sphereTransform,Mult(slopeRotMat,sphereModelMat));
 	mat4 complete = Mult(camMatrix, modelToWorld);
 	//Upload
@@ -280,7 +280,7 @@ void createSphere(){
 	tmp.shaderprogram = program;
 	tmp.objectTransform = IdentityMatrix();
 	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f,10.0f));
-	//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11], 
+	//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
 	LoadTGATextureSimple(tmp.texName, &tmp.texNum);
 	vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
 	Collider tmpCol = makeSphereCollider(midP, 1.0f);
@@ -337,10 +337,10 @@ void checkPlayerCollision(){
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
-	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest);
+	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements);
 	positionCamera();
 	updateColliders();
-	checkPlayerCollision();
+	//checkPlayerCollision();
 	if(t==0) loops++;
 	if(loops % 10 == 0 && t==0){
 		createSphere();

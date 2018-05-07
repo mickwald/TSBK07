@@ -2,6 +2,9 @@
 #include "VectorUtils3.h"
 #include "GL_utilities.h"
 
+#include "LoadTGA.h"
+#include "init.h"
+
 int prevX = 0;
 int prevY = 0;
 float dX = 0;
@@ -30,7 +33,7 @@ void mouseDown(int button, int state, int x, int y)
 	}
 }
 
-void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest){
+void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest, Collider *playerCol, drawObject **drawObjects, int *drawObjectsArrayElements){
 
 	//Check mouse input
 	glutMouseFunc(mouseDown);
@@ -95,7 +98,24 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 		*camMatrix = Mult(Ry(1*M_PI/180),*camMatrix );
 	}
 	if(glutKeyIsDown(GLUT_KEY_DOWN)){
+		//mat4 tmp = *sphereTransform;
 		*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[2],0,*sphereSpeed*camMatrix->m[0]));
+		/*int i = 0;
+		while(i < *drawObjectsArrayElements){
+			printf("innan check col\n");
+			bool hit = checkCollision(*playerCol, drawObjects[i]->col);
+			printf("efter check col\n");
+			if(hit){
+				printf("HIT!\n");
+				int j;
+				for(j=0; j<16; j++){
+					sphereTransform->m[i] = tmp.m[i];
+				}
+				*sphereTransform = tmp;
+			}
+			i++;
+		}
+		i= 0;*/
 	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
 		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[2],0,-*sphereSpeed*camMatrix->m[0]));

@@ -26,6 +26,7 @@ typedef struct ColliderList {
 } ColliderList;
 
 bool checkCollision(Collider c, Collider c2){
+  //printf("check col begin\n");
   GLfloat collisionRadius = 10; // check for collisions if inside this
   GLfloat radiusSqrd = pow(collisionRadius,2);
 
@@ -35,6 +36,7 @@ bool checkCollision(Collider c, Collider c2){
 
   vec3 distance = SetVector(distanceX, distanceY, distanceZ);
   GLfloat distanceSqrd = pow(distance.x,2)+pow(distance.y,2)+pow(distance.z,2);
+  //printf("efter distanceSqrd\n");
   //printf("player midpoint x: %f y:%f z:%f\n emeny midpointx: %f y:%f z:%f\n",c.midPoint.x,c.midPoint.y,c.midPoint.z,c2.midPoint.x,c2.midPoint.y,c2.midPoint.z );
 
   if(radiusSqrd >= distanceSqrd){ //close enough to check collision
