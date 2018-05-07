@@ -312,18 +312,14 @@ void updateColliders(){
 
 void checkPlayerCollision(){
 	int i = 0;
-	bool hit = checkCollision(playerCol, drawObjects[0].col);
-	if(hit){
-		printf("HIT!\n");
-	}
-	/*while(i < drawArrayElements){
-		bool hit = checkCollision(playerCol, drawObjects[0].col);
+	while(i < drawArrayElements){
+		bool hit = checkCollision(playerCol, drawObjects[i].col);
 		if(hit){
 			printf("HIT!\n");
 		}
 		i++;
 	}
-	i =0;*/
+	i= 0;
 }
 
 void timer(int i)

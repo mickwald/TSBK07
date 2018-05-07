@@ -75,7 +75,7 @@ bool checkCollision(Collider c, Collider c2){
 
     }
     else{ // both colliders are spheres
-      printf("raduis: %f distance: %f\n", pow((c.radius + c2.radius),2), distanceSqrd);
+      //printf("raduis: %f distance: %f\n", pow((c.radius + c2.radius),2), distanceSqrd);
       if(distanceSqrd < pow((c.radius + c2.radius),2)){
         return true;
       }
