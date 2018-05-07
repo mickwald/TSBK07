@@ -38,6 +38,7 @@ mat4 transform, rot, trans, total, complete, scale, sphereModelMat;
 Model *skyBox;
 GLuint skyboxprogram;
 mat4 skyBoxTransform;
+Collider playerCol;
 
 float rotTest = 0;
 
@@ -229,6 +230,9 @@ void display(void)
 		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
 		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
 		DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
+		if(i==1){
+			//printf("x: %F y: %f z: %f\n", drawObjects[0].objectTransform.m[3], drawObjects[0].objectTransform.m[7], drawObjects[0].objectTransform.m[11]);
+		}
 		i++;
 	}
 	i = 0;
@@ -253,6 +257,7 @@ void display(void)
 }
 
 
+
 int loops = 0;
 void createSphere(){
 	drawObject tmp;
@@ -265,7 +270,9 @@ void createSphere(){
 	tmp.shaderprogram = program;
 	tmp.objectTransform = IdentityMatrix();
 	tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f, 50.0f));
-	//tmp->col = NULL;
+	vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
+	Collider tmpCol = makeSphereCollider(midP, 1.0f);
+	tmp.col = tmpCol;
 	if(__debug__ && !t){
 		printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
 	}
@@ -292,11 +299,40 @@ void positionCamera(){
 
 }
 
+void updateColliders(){
+	vec3 newMidP = SetVector(sphereTransform.m[3],sphereTransform.m[7],sphereTransform.m[11]);
+	playerCol.midPoint = newMidP;
+	int i;
+	while(i < drawArrayElements){
+		drawObjects[i].col.midPoint.y = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+		i++;
+	}
+	i=0;
+}
+
+void checkPlayerCollision(){
+	int i = 0;
+	bool hit = checkCollision(playerCol, drawObjects[0].col);
+	if(hit){
+		printf("HIT!\n");
+	}
+	/*while(i < drawArrayElements){
+		bool hit = checkCollision(playerCol, drawObjects[0].col);
+		if(hit){
+			printf("HIT!\n");
+		}
+		i++;
+	}
+	i =0;*/
+}
+
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
 	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest);
 	positionCamera();
+	updateColliders();
+	checkPlayerCollision();
 	if(t==0) loops++;
 	if(loops % 10 == 0 && t==0){
 		createSphere();
@@ -314,8 +350,8 @@ int main(int argc, char **argv)
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
 	printf("Loading...\n");
-	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize);
-	printf("Load complete\n");	
+	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol);
+	printf("Load complete\n");
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
 	glutMainLoop();

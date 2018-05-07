@@ -173,7 +173,7 @@ Model* GenerateTerrain(TextureData *tex)
 
 
 //INIT Starts here
-void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize)
+void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol)
 {
 
 	printError("init start");
@@ -182,8 +182,11 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
-	*sphereModel = LoadModelPlus("bunnyplus.obj");
+	*sphereModel = LoadModelPlus("webtrcc.obj");
 	*skyBox = LoadModelPlus("skybox.obj");
+
+	vec3 playerMidP = SetVector(sphereTransform->m[3],sphereTransform->m[7],sphereTransform->m[11]);
+	*playerCol = makeSphereCollider(playerMidP, 1.0f);
 
 
 	*projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
@@ -201,7 +204,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	printError("init shader");
 
 	*sphereTransform = IdentityMatrix();
-	*sphereSpeed = 0.1f;
+	*sphereSpeed = 0.5f;
 
 	glUniformMatrix4fv(glGetUniformLocation(*program, "projMatrix"), 1, GL_TRUE, projectionMatrix->m);
 
