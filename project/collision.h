@@ -15,3 +15,4 @@ typedef struct Collider {
 typedef struct ColliderList ColliderList;
 
 bool checkCollision(Collider c, Collider c2);
+Collider makeSphereCollider(vec3 midP, GLfloat rad);

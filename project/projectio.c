@@ -8,6 +8,7 @@ float dX = 0;
 float dY = 0;
 int down = 0;
 int mouseMoved = 0;
+
 void mouse(int x, int y){
 	dX = x - prevX;
 	dY = y - prevY;
@@ -17,6 +18,7 @@ void mouse(int x, int y){
 	//printf("X: %d PrevX: %d dX: %f Y: %d PrevY: %d dY: %f\n", x, prevX, dX, y, prevY, dY);
 	//printf("dX: %d dY: %d\n", dX, dY);
 }
+
 void mouseDown(int button, int state, int x, int y)
 {
 	if (state == GLUT_DOWN)
@@ -27,7 +29,6 @@ void mouseDown(int button, int state, int x, int y)
 		down = 0;
 	}
 }
-
 
 void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest){
 
@@ -40,26 +41,28 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 			//printf("X: %d PrevX: %d dX: %d Y: %d PrevY: %d dY: %d\n", x, prevX, dX, y, prevY, dY);
 			//printf("dX: %f dY: %f\n", dX, dY);
 		}
-
+			*rotTest -= dX*M_PI/360;
 			if(*lockCamera == 1){
-				*rotTest -= dX*M_PI/360;
-				//*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
-				vec3 traslation = SetVector(camMatrix->m[3],camMatrix->m[7],camMatrix->m[11]);
-				/*camMatrix->m[3] += sphereTransform->m[3];
-				camMatrix->m[7] += sphereTransform->m[7];
-				camMatrix->m[11] += 	sphereTransform->m[11];
 
-				camMatrix->m[3] = 0;
-				camMatrix->m[7] = 0;
-				camMatrix->m[11] = 	0;
+				//*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
+				//vec3 traslation = SetVector(camMatrix->m[3],camMatrix->m[7],camMatrix->m[11]);
+				/*camMatrix->m[3] = sphereTransform->m[3];
+				camMatrix->m[7] = -sphereTransform->m[7] -2.0f;
+				camMatrix->m[11] = sphereTransform->m[11] - 5.0f;
+
+				//camMatrix->m[3] = 0;
+				//camMatrix->m[7] = 0;
+				//camMatrix->m[11] = 	0;
 				*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
 				camMatrix->m[3] = traslation.x;
 				camMatrix->m[7] = traslation.y;
 				camMatrix->m[11] = 	traslation.z;*/
+				//camMatrix->m[0] = sphereTransform->m[0];
+				//camMatrix->m[2] = sphereTransform->m[2];
 
 			}
 			else{
-				*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
+				//*camMatrix = Mult(Ry(dX*M_PI/360),*camMatrix);
 			}
 
 		dX = 0;

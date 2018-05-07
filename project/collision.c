@@ -26,16 +26,16 @@ typedef struct ColliderList {
 } ColliderList;
 
 bool checkCollision(Collider c, Collider c2){
-
   GLfloat collisionRadius = 10; // check for collisions if inside this
   GLfloat radiusSqrd = pow(collisionRadius,2);
 
-  GLfloat distanceX = c2.midPoint.x - c.midPoint.x;
-  GLfloat distanceY = c2.midPoint.y - c.midPoint.y;
-  GLfloat distanceZ = c2.midPoint.z - c.midPoint.z;
+  GLfloat distanceX = c.midPoint.x - c2.midPoint.x;
+  GLfloat distanceY = c.midPoint.y - c2.midPoint.y;
+  GLfloat distanceZ = c.midPoint.z - c2.midPoint.z;
 
   vec3 distance = SetVector(distanceX, distanceY, distanceZ);
   GLfloat distanceSqrd = pow(distance.x,2)+pow(distance.y,2)+pow(distance.z,2);
+  //printf("player midpoint x: %f y:%f z:%f\n emeny midpointx: %f y:%f z:%f\n",c.midPoint.x,c.midPoint.y,c.midPoint.z,c2.midPoint.x,c2.midPoint.y,c2.midPoint.z );
 
   if(radiusSqrd >= distanceSqrd){ //close enough to check collision
 
@@ -75,7 +75,7 @@ bool checkCollision(Collider c, Collider c2){
 
     }
     else{ // both colliders are spheres
-
+      printf("raduis: %f distance: %f\n", pow((c.radius + c2.radius),2), distanceSqrd);
       if(distanceSqrd < pow((c.radius + c2.radius),2)){
         return true;
       }
@@ -83,4 +83,18 @@ bool checkCollision(Collider c, Collider c2){
 
   }
   return false;
+  }
+Collider makeSphereCollider(vec3 midP, GLfloat rad){
+  	Collider tmpCol;
+  	tmpCol.AABB = false;
+  	tmpCol.maxX = 0;
+  	tmpCol.maxY = 0;
+  	tmpCol.maxZ = 0;
+  	tmpCol.minX = 0;
+  	tmpCol.minY = 0;
+  	tmpCol.minX = 0;
+  	tmpCol.midPoint = midP;
+  	tmpCol.radius = rad;
+
+  	return tmpCol;
   }
