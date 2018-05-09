@@ -37,6 +37,10 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 
 	//Check mouse input
 	glutMouseFunc(mouseDown);
+	int j;
+	for(j=0; j<16; j++){
+		tmpPlayerMat->m[j] = sphereTransform->m[j];
+	}
 
 	if(down == 1){
 
@@ -121,24 +125,24 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 		i= 0;*/
 	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
-		int j;
+		/*int j;
 		for(j=0; j<16; j++){
 			tmpPlayerMat->m[j] = sphereTransform->m[j];
-		}
+		}*/
 		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[2],0,-*sphereSpeed*camMatrix->m[0]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
-		int j;
+		/*int j;
 		for(j=0; j<16; j++){
 			tmpPlayerMat->m[j] = sphereTransform->m[j];
-		}
+		}*/
 		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[0],0,*sphereSpeed*camMatrix->m[2]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_LEFT)){
-		int j;
+		/*int j;
 		for(j=0; j<16; j++){
 			tmpPlayerMat->m[j] = sphereTransform->m[j];
-		}
+		}*/
 		*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[0],0,-*sphereSpeed*camMatrix->m[2]));
 	}
 	if(glutKeyIsDown('+')){
