@@ -20,6 +20,21 @@ typedef struct drawObject {
 	Collider col;
 } drawObject;
 
+typedef struct bullet {
+	Model *m;
+	char *texName;
+	GLuint texNum;
+	mat4 trans;
+	mat4 rot;
+	mat4 scale;
+	GLuint shaderprogram;
+	mat4 bulletTransform;
+	GLfloat bulletSpeed;
+	int TTL;
+	vec3 moveVec;
+	Collider col;
+} bullet;
+
 //Light definitions
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
 
@@ -173,7 +188,7 @@ Model* GenerateTerrain(TextureData *tex)
 
 
 //INIT Starts here
-void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol)
+void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol, bullet **bullets, int *bulletsArrayElements, int *bulletsArraySize)
 {
 
 	printError("init start");
@@ -182,7 +197,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
-	*sphereModel = LoadModelPlus("webtrcc.obj");
+	*sphereModel = LoadModelPlus("bunnyplus.obj");
 	*skyBox = LoadModelPlus("skybox.obj");
 
 	vec3 playerMidP = SetVector(sphereTransform->m[3],sphereTransform->m[7],sphereTransform->m[11]);
@@ -196,6 +211,11 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	*drawObjectsArrayElements = 0;
 	*drawObjectsArraySize = initialArraySize;
 
+	//bullet init
+	printf("bullet init\n");
+	*bullets = (struct bullet*) malloc(sizeof(bullet)*initialArraySize);
+	*bulletsArrayElements = 0;
+	*bulletsArraySize = initialArraySize;
 
 	// Load and compile shader
 	*program = loadShaders("world.vert", "world.frag");

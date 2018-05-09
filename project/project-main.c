@@ -25,7 +25,7 @@ int lockCamera = 0;
 int loops = 0;
 
 // vertex array object
-Model *sphereModel, *tm;
+Model *sphereModel, *tm, *bulletModel;
 
 // Reference to shader program
 GLuint program, texGrass, texMountain, texLake, texTerrain, texSphere;
@@ -39,8 +39,19 @@ mat4 transform, rot, trans, total, complete, scale, sphereModelMat;
 Model *skyBox;
 GLuint skyboxprogram;
 mat4 skyBoxTransform;
+
+//GAME LOGIC STUFF
 Collider playerCol;
 mat4 tmpPlayerMat;
+bool shoot, shotAlive, cooldown = false;
+int cooldownTicks = 50;
+
+
+//BULLET STUFF
+bullet *bullets;
+int bulletsArrayElements;
+int bulletsArraySize;
+
 
 float rotTest = 0;
 
@@ -246,6 +257,32 @@ void display(void)
 	}
 	i = 0;
 
+
+	//Draw bullets
+	int j = 0;
+	while(j < bulletsArrayElements){
+		GLfloat bulletHeight = calcHeight(bullets[j].bulletTransform.m[3], bullets[j].bulletTransform.m[11], ttex.width, tm->vertexArray);
+		bullets[j].bulletTransform.m[7] = bulletHeight;
+		//bullets[j].bulletTransform.m[7] = bulletHeight;
+		bullets[j].col.midPoint.y = bulletHeight;
+		mat4 model = Mult(bullets[j].trans,bullets[j].scale);
+		model = Mult(bullets[j].rot, model);
+		mat4 modelToWorld = Mult(bullets[j].bulletTransform, model);
+		mat4 modelToView = Mult(camMatrix, modelToWorld);
+		glUniformMatrix4fv(glGetUniformLocation(bullets[j].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
+		glUniform1i(glGetUniformLocation(bullets[j].shaderprogram, "color"), true);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, bullets[j].texNum);
+		glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
+		//printf("Drawing item %d.\n", i);
+		DrawModel(bullets[j].m, bullets[j].shaderprogram, "inPosition", "inNormal", "inTexCoord");
+		if(j==1){
+			//printf("x: %F y: %f z: %f\n", bullets[0].bulletTransform.m[3], bullets[0].bulletTransform.m[7], bullets[0].bulletTransform.m[11]);
+		}
+		j++;
+	}
+	j = 0;
+
 	//Draw sphere
 	//Get correct texture
 	glActiveTexture(GL_TEXTURE4);
@@ -274,7 +311,6 @@ void display(void)
 
 
 void createSphere(){
-
 	if( drawArrayElements < drawArraySize){
 		drawObject tmp;
 		tmp.m = LoadModelPlus("webtrcc.obj");
@@ -347,13 +383,96 @@ void checkPlayerCollision(){
 	i= 0;
 }
 
+void createBullet(){
+	if( bulletsArrayElements < bulletsArraySize){
+		bullet tmp;
+		GLfloat bulletSpawnOffset = 5.0f;
+		tmp.m = LoadModelPlus("webtrcc.obj");
+		tmp.texName = "rock_01_dif.tga";
+		tmp.trans = IdentityMatrix();
+		tmp.scale = IdentityMatrix();//S(0.5f, 0.5f, 0.5f);
+		tmp.rot = IdentityMatrix();
+		tmp.shaderprogram = program;
+		tmp.bulletTransform = IdentityMatrix();
+		printf("sphereModelMat\n 0: %f 2: %f\n",sphereModelMat.m[0],sphereModelMat.m[2] );
+		tmp.bulletTransform = Mult(tmp.bulletTransform, T(sphereModelMat.m[2]*(sphereTransform.m[3] + bulletSpawnOffset), sphereTransform.m[7] ,sphereModelMat.m[0]*(sphereTransform.m[11] + bulletSpawnOffset)));
+		tmp.bulletSpeed = 0.3f;
+		tmp.moveVec = Normalize(SetVector(tmp.bulletTransform.m[3]-sphereTransform.m[3],tmp.bulletTransform.m[7]-sphereTransform.m[7],tmp.bulletTransform.m[11]-sphereTransform.m[11]));
+		printf("X: %f, Y: %f, Z: %f\n", tmp.moveVec.x, tmp.moveVec.y, tmp.moveVec.z);
+		tmp.TTL = 250; //5 sek?
+
+		//calcSlope(tmp.bulletTransform.m[3], tmp.bulletTransform.m[11],
+		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
+		vec3 midP = SetVector(tmp.bulletTransform.m[3],tmp.bulletTransform.m[7],tmp.bulletTransform.m[11]);
+		Collider tmpCol = makeSphereCollider(midP, 1.0f);
+		tmp.col = tmpCol;
+		printf("made a bullet!!!\n");
+		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",tmp.bulletTransform.m[0],tmp.bulletTransform.m[1],tmp.bulletTransform.m[2],tmp.bulletTransform.m[3],tmp.bulletTransform.m[4],tmp.bulletTransform.m[5],tmp.bulletTransform.m[6],tmp.bulletTransform.m[7],tmp.bulletTransform.m[8],tmp.bulletTransform.m[9],tmp.bulletTransform.m[10],tmp.bulletTransform.m[11],tmp.bulletTransform.m[12],tmp.bulletTransform.m[13],tmp.bulletTransform.m[14],tmp.bulletTransform.m[15]);
+
+		if(__debug__ && !t){
+			printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
+		}
+		if(bulletsArrayElements < bulletsArraySize){
+			bullets[bulletsArrayElements++] = tmp;
+			if(__debug__ && !t){
+				printf("Added bullet\n");
+			}
+		} else {
+			if(__debug__ && !t){
+				printf("Size of bulletArrayElements: %d\n", drawArrayElements);
+				printf("Can't insert more bullets!\n");
+				printf("Size of bullets: %d, and bullets[0]: %d\n", (int) sizeof(bullets), (int) sizeof(bullets[0]));
+			}
+		}
+	}
+}
+
+void checkShoot(){
+
+	//cooldown = false;
+	if(shoot && !cooldown){
+		printf("SHOOT!\n");
+		createBullet();
+		shoot = false;
+		cooldown = true;
+		cooldownTicks = 50;
+	}
+	else{
+		if(cooldownTicks == 0){
+			cooldown = false;
+		}
+		cooldownTicks--;
+	}
+}
+
+void moveBullet(){
+	int i;
+	while(i < bulletsArrayElements){
+		bullets[i].bulletTransform = Mult(bullets[i].bulletTransform, T(bullets[i].moveVec.x*bullets[i].bulletSpeed, 0, bullets[i].moveVec.z*bullets[i].bulletSpeed));
+		i++;
+	}
+	i=0;
+}
+void moveEnemy(){
+	int i = 0;
+	while(i < drawArrayElements){
+		vec3 enemyVec = SetVector(sphereTransform.m[3] - drawObjects[i].objectTransform.m[3],0,sphereTransform.m[11] - drawObjects[i].objectTransform.m[11]);
+		drawObjects[i].objectTransform = Mult(drawObjects[i].objectTransform, T(enemyVec.x*0.1f, 0 , enemyVec.x*0.1f));
+		i++;
+	}
+	i= 0;
+}
+
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
-	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements, &tmpPlayerMat);
+	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements, &tmpPlayerMat, &shoot);
 	positionCamera();
 	updateColliders();
 	checkPlayerCollision();
+	checkShoot();
+	moveBullet();
+	//moveEnemy();
 	if(t==0) loops++;
 	if(loops % 10 == 0 && t==0){
 		createSphere();
@@ -371,7 +490,7 @@ int main(int argc, char **argv)
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
 	printf("Loading...\n");
-	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol);
+	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol, &bullets, &bulletsArrayElements, &bulletsArraySize);
 	printf("Load complete\n");
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
