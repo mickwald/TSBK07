@@ -13,7 +13,12 @@
 #include "projectio.h"
 #define __debug__ 0
 
-
+#define near 0.2
+#define far 100.0
+#define left -0.1
+#define right 0.1
+#define top 0.1
+#define bot -0.1
 
 drawObject *drawObjects;
 int drawArrayElements;
@@ -41,6 +46,10 @@ GLuint skyboxprogram;
 mat4 skyBoxTransform;
 Collider playerCol;
 mat4 tmpPlayerMat;
+
+//Frustum points
+vec3 farTopLeft, farTopRight, farBotLeft, farBotRight;
+
 
 float rotTest = 0;
 
@@ -175,6 +184,10 @@ mat4 calcSlopeRotMat(){
 
 }
 
+int inFrustum(drawObject o){
+	return 1;
+}
+
 
 void display(void)
 {
@@ -224,25 +237,26 @@ void display(void)
 	//Draw drawObjects
 	int i = 0;
 	while(i < drawArrayElements){
-		GLfloat objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
-		drawObjects[i].objectTransform.m[7] = objectHeight;
-		//drawObjects[i].objectTransform.m[7] = objectHeight;
-		drawObjects[i].col.midPoint.y = objectHeight;
-		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
-		model = Mult(drawObjects[i].rot, model);
-		mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
-		mat4 modelToView = Mult(camMatrix, modelToWorld);
-		glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
-		glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
-		glActiveTexture(GL_TEXTURE4);
-		glBindTexture(GL_TEXTURE_2D, drawObjects[i].texNum);
-		glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
-		//printf("Drawing item %d.\n", i);
-		DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
-		if(i==1){
-			//printf("x: %F y: %f z: %f\n", drawObjects[0].objectTransform.m[3], drawObjects[0].objectTransform.m[7], drawObjects[0].objectTransform.m[11]);
+		if(inFrustum(drawObjects[i])){
+			//printf("Drawing item %d.\n", i);
+			GLfloat objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+			drawObjects[i].objectTransform.m[7] = objectHeight;
+			drawObjects[i].col.midPoint.y = objectHeight;
+			mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
+			model = Mult(drawObjects[i].rot, model);
+			mat4 modelToWorld = Mult(model, drawObjects[i].objectTransform);
+			mat4 modelToView = Mult(camMatrix, modelToWorld);
+			glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
+			glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
+			glActiveTexture(GL_TEXTURE4);
+			glBindTexture(GL_TEXTURE_2D, drawObjects[i].texNum);
+			glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
+			DrawModel(drawObjects[i].m, drawObjects[i].shaderprogram, "inPosition", "inNormal", "inTexCoord");
+			if(i==1){
+				//printf("x: %F y: %f z: %f\n", drawObjects[0].objectTransform.m[3], drawObjects[0].objectTransform.m[7], drawObjects[0].objectTransform.m[11]);
+			}
+			i++;
 		}
-		i++;
 	}
 	i = 0;
 
@@ -347,10 +361,29 @@ void checkPlayerCollision(){
 	i= 0;
 }
 
+int equal(mat4 a, mat4 b){
+	int i;
+	for(i = 0; i < 16; i++){
+		if(a.m[i] != b.m[i]){
+			return 0;
+		}
+	}
+	return 1;
+}
+
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
+	mat4 tmpCamera = camMatrix;
 	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements, &tmpPlayerMat);
+	if (!equal(tmpCamera,camMatrix)){
+		//Recalc frustum
+		//farTopLeft = far/near*left ??
+		farTopLeft = SetVector((far/near)*left,(far/near)*top,far);
+		farTopRight = SetVector((far/near)*right,(far/near)*top,far);
+		farBotLeft = SetVector((far/near)*left,(far/near)*bot,far);
+		farBotRight = SetVector((far/near)*right,(far/near)*bot,far);
+	}
 	positionCamera();
 	updateColliders();
 	checkPlayerCollision();
@@ -371,7 +404,7 @@ int main(int argc, char **argv)
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
 	printf("Loading...\n");
-	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol);
+	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol, &farTopLeft, &farTopRight, &farBotLeft, &farBotRight);
 	printf("Load complete\n");
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);

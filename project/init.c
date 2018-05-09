@@ -5,6 +5,12 @@
 #include "LoadTGA.h"
 #include "collision.h"
 
+#define near 0.2
+#define far 100.0
+#define left -0.1
+#define right 0.1
+#define top 0.1
+#define bot -0.1
 
 int initialArraySize = 3;
 
@@ -173,7 +179,7 @@ Model* GenerateTerrain(TextureData *tex)
 
 
 //INIT Starts here
-void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol)
+void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol, vec3 *farTopLeft, vec3 *farTopRight, vec3 *farBotLeft, vec3 *farBotRight)
 {
 
 	printError("init start");
@@ -189,7 +195,13 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	*playerCol = makeSphereCollider(playerMidP, 1.0f);
 
 
-	*projectionMatrix = frustum(-0.1, 0.1, -0.1, 0.1, 0.2, 100.0);
+	*projectionMatrix = frustum(left, right, bot, top, near, far);
+
+	//Frustum
+	*farTopLeft = SetVector(0,0,0);
+	*farTopRight = SetVector(0,0,0);
+	*farBotLeft = SetVector(0,0,0);
+	*farBotRight = SetVector(0,0,0);
 
 	//drawObjectsArray init
 	*drawObjects = (struct drawObject*) malloc(sizeof(drawObject)*initialArraySize);

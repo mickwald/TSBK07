@@ -180,6 +180,7 @@ vec3 operator*(double a, const vec3 &b) // scalar * vec3
 	return vec3(a*b.x, a*b.y, a*b.z);
 }
 
+
 inline
 vec3 operator/(const vec3 &b, double a) // vec3 / scalar
 {
@@ -275,6 +276,7 @@ void operator/=(vec4 &a, const float &b) // vec4 /= scalar
 }
 
 // --- Matrix multiplication ---
+
 
 // mat4 * mat4
 inline
