@@ -40,6 +40,7 @@ Model *skyBox;
 GLuint skyboxprogram;
 mat4 skyBoxTransform;
 Collider playerCol;
+mat4 tmpPlayerMat;
 
 float rotTest = 0;
 
@@ -315,6 +316,12 @@ void positionCamera(){
 	}
 
 }
+void revertPlayerMovement(){
+	int j;
+	for(j=0; j<16; j++){
+		sphereTransform.m[j] = tmpPlayerMat.m[j];
+	}
+}
 
 void updateColliders(){
 	vec3 newMidP = SetVector(sphereTransform.m[3],sphereTransform.m[7],sphereTransform.m[11]);
@@ -333,6 +340,7 @@ void checkPlayerCollision(){
 		bool hit = checkCollision(playerCol, drawObjects[i].col);
 		if(hit){
 			printf("HIT!\n");
+			revertPlayerMovement();
 		}
 		i++;
 	}
@@ -342,10 +350,10 @@ void checkPlayerCollision(){
 void timer(int i)
 {
 	glutTimerFunc(20, &timer, i);
-	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements);
+	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements, &tmpPlayerMat);
 	positionCamera();
 	updateColliders();
-	//checkPlayerCollision();
+	checkPlayerCollision();
 	if(t==0) loops++;
 	if(loops % 10 == 0 && t==0){
 		createSphere();

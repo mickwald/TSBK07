@@ -33,7 +33,7 @@ void mouseDown(int button, int state, int x, int y)
 	}
 }
 
-void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest, Collider *playerCol, drawObject **drawObjects, int *drawObjectsArrayElements){
+void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest, Collider *playerCol, drawObject **drawObjects, int *drawObjectsArrayElements, mat4 *tmpPlayerMat){
 
 	//Check mouse input
 	glutMouseFunc(mouseDown);
@@ -98,7 +98,10 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 		*camMatrix = Mult(Ry(1*M_PI/180),*camMatrix );
 	}
 	if(glutKeyIsDown(GLUT_KEY_DOWN)){
-		//mat4 tmp = *sphereTransform;
+		int j;
+		for(j=0; j<16; j++){
+			tmpPlayerMat->m[j] = sphereTransform->m[j];
+		}
 		*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[2],0,*sphereSpeed*camMatrix->m[0]));
 		/*int i = 0;
 		while(i < *drawObjectsArrayElements){
@@ -109,7 +112,7 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 				printf("HIT!\n");
 				int j;
 				for(j=0; j<16; j++){
-					sphereTransform->m[i] = tmp.m[i];
+				//	sphereTransform->m[j] = tmp.m[j];
 				}
 				*sphereTransform = tmp;
 			}
@@ -118,12 +121,24 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 		i= 0;*/
 	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
+		int j;
+		for(j=0; j<16; j++){
+			tmpPlayerMat->m[j] = sphereTransform->m[j];
+		}
 		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[2],0,-*sphereSpeed*camMatrix->m[0]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
+		int j;
+		for(j=0; j<16; j++){
+			tmpPlayerMat->m[j] = sphereTransform->m[j];
+		}
 		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[0],0,*sphereSpeed*camMatrix->m[2]));
 	}
 	if(glutKeyIsDown(GLUT_KEY_LEFT)){
+		int j;
+		for(j=0; j<16; j++){
+			tmpPlayerMat->m[j] = sphereTransform->m[j];
+		}
 		*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[0],0,-*sphereSpeed*camMatrix->m[2]));
 	}
 	if(glutKeyIsDown('+')){
