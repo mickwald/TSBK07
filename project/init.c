@@ -12,7 +12,7 @@
 #define top 0.1
 #define bot -0.1
 
-int initialArraySize = 3;
+int initialArraySize = 10;
 
 typedef struct drawObject {
 	Model *m;
@@ -24,6 +24,7 @@ typedef struct drawObject {
 	GLuint shaderprogram;
 	mat4 objectTransform;
 	Collider col;
+	bool alive;
 } drawObject;
 
 typedef struct bullet {
@@ -39,6 +40,7 @@ typedef struct bullet {
 	int TTL;
 	vec3 moveVec;
 	Collider col;
+	bool alive;
 } bullet;
 
 //Light definitions

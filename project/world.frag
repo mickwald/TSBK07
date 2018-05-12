@@ -19,6 +19,7 @@ uniform float specularExponent[4];
 uniform bool isDirectional[4];
 
 uniform bool color;
+uniform bool bullet;
 void main(void)
 {
 	const float kd=0.45f;
@@ -64,10 +65,13 @@ void main(void)
 	shadeNoSpec = kdNoSpec * dot(normalize(fragNormal), light);
 	shadeNoSpec = clamp(shadeNoSpec, 0, 1);
 
-
-	if(color){
+	if(bullet){
+		outColor = texture(texSphere, texCoord)*vec4(1.0f, 0.0f, 0.0f, 1.0f);
+	}
+	else if(color){
 		outColor = texture(texSphere, texCoord)*vec4(shade[0],shade[1],shade[2],1.0f);
 	} else {
+			
 			if(Pos.y <= 0.1f){ // Apply Lake texture Rock texture * blue
 				outColor = texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(0.0f, 0.6f, 1.0f, 1.0f) * (1-(10*Pos.y));
 				outColor += texture(texLake, texCoord) * vec4(shade[0],shade[1],shade[2],1.0f) * vec4(1.0f, 1.0f, 0.5f, 1.0f) * (10*Pos.y);

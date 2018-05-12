@@ -14,6 +14,7 @@ typedef struct drawObject {
 	GLuint shaderprogram;
 	mat4 objectTransform;
 	Collider col;
+	bool alive;
 } drawObject;
 
 typedef struct bullet {
@@ -29,6 +30,7 @@ typedef struct bullet {
 	int TTL;
 	vec3 moveVec;
 	Collider col;
+	bool alive;
 } bullet;
 
 
