@@ -49,6 +49,10 @@ mat4 tmpPlayerMat;
 
 //Frustum points
 vec3 farTopLeft, farTopRight, farBotLeft, farBotRight;
+typedef struct plane {
+	float a,b,c,d;
+} plane;
+plane frustumPlane[4];
 
 
 float rotTest = 0;
@@ -184,7 +188,18 @@ mat4 calcSlopeRotMat(){
 
 }
 
-int inFrustum(drawObject o){
+int inFrustum(mat4 objectTransform){
+	//printf("Checking frustum..\n");
+	vec3 point = SetVector(objectTransform.m[3],objectTransform.m[7],objectTransform.m[11]);
+	int i = 0;
+	for(i = 0; i<4;i++){
+		float distance = point.x*frustumPlane[i].a + point.y*frustumPlane[i].b + point.z*frustumPlane[i].c;
+		//printf("Plane %i: a=%f b=%f c=%f d=%f\n",i,frustumPlane[i].a,frustumPlane[i].b,frustumPlane[i].c,frustumPlane[i].d);
+		//printf("Distance: %f\n", distance);
+		if(frustumPlane[i].d > distance){
+			return 0;
+		}
+	}
 	return 1;
 }
 
@@ -237,8 +252,9 @@ void display(void)
 	//Draw drawObjects
 	int i = 0;
 	while(i < drawArrayElements){
-		if(inFrustum(drawObjects[i])){
-			//printf("Drawing item %d.\n", i);
+		//if(inFrustum(drawObjects[i].objectTransform)){
+		if(inFrustum(sphereTransform)){
+			printf("Drawing item %d.\n", i);
 			GLfloat objectHeight = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
 			drawObjects[i].objectTransform.m[7] = objectHeight;
 			drawObjects[i].col.midPoint.y = objectHeight;
@@ -255,8 +271,9 @@ void display(void)
 			if(i==1){
 				//printf("x: %F y: %f z: %f\n", drawObjects[0].objectTransform.m[3], drawObjects[0].objectTransform.m[7], drawObjects[0].objectTransform.m[11]);
 			}
-			i++;
+			
 		}
+		i++;
 	}
 	i = 0;
 
@@ -298,7 +315,7 @@ void createSphere(){
 		tmp.scale = IdentityMatrix();
 		tmp.shaderprogram = program;
 		tmp.objectTransform = IdentityMatrix();
-		tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f,10.0f));
+		//tmp.objectTransform = Mult(tmp.objectTransform, T((float)loops, 0.0f,10.0f));
 		//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
 		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
 		vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
@@ -383,6 +400,71 @@ void timer(int i)
 		farTopRight = SetVector((far/near)*right,(far/near)*top,far);
 		farBotLeft = SetVector((far/near)*left,(far/near)*bot,far);
 		farBotRight = SetVector((far/near)*right,(far/near)*bot,far);
+		printf("\nTop Left;\nx: %f, y: %f, z:%f\n",farTopLeft.x, farTopLeft.y,farTopLeft.z);
+		printf("Top Right;\nx: %f, y: %f, z:%f\n",farTopRight.x, farTopRight.y,farTopRight.z);
+		printf("Bot Left;\nx: %f, y: %f, z:%f\n",farBotLeft.x, farBotLeft.y,farBotLeft.z);
+		printf("Bot Right;\nx: %f, y: %f, z:%f\n",farBotRight.x, farBotRight.y,farBotRight.z);
+		//Inverted
+		
+		mat4 invCamMatrix = InvertMat4(camMatrix);
+		/*
+		farTopLeft = MultVec3(invCamMatrix,farTopLeft);
+		farTopRight = MultVec3(invCamMatrix,farTopRight);
+		farBotLeft = MultVec3(invCamMatrix,farBotLeft);
+		farBotRight = MultVec3(invCamMatrix,farBotRight);
+		*/
+		//Normal
+		/*
+		farTopLeft = MultVec3(InvertMat4(projectionMatrix),farTopLeft);
+		farTopRight = MultVec3(camMatrix,farTopRight);
+		farBotLeft = MultVec3(camMatrix,farBotLeft);
+		farBotRight = MultVec3(camMatrix,farBotRight);
+		farTopLeft = MultVec3(InvertMat4(camMatrix),farTopLeft);
+		*/
+		/*
+		//Invert vectors
+		farTopLeft = ScalarMult(farTopLeft, -1.0f);
+		farTopRight = ScalarMult(farTopRight, -1.0f);
+		farBotLeft = ScalarMult(farBotLeft, -1.0f);
+		farBotRight = ScalarMult(farBotRight, -1.0f);
+		*/
+		/*
+		farTopLeft.x = -farTopLeft.x;
+		farTopRight.x = -farTopRight.x;
+		farBotLeft.x = -farBotLeft.x;
+		farBotRight.x = -farBotRight.x;
+		*/
+		printf("\n\nTop Left;\nx: %f, y: %f, z:%f\n",farTopLeft.x, farTopLeft.y,farTopLeft.z);
+		printf("Top Right;\nx: %f, y: %f, z:%f\n",farTopRight.x, farTopRight.y,farTopRight.z);
+		printf("Bot Left;\nx: %f, y: %f, z:%f\n",farBotLeft.x, farBotLeft.y,farBotLeft.z);
+		printf("Bot Right;\nx: %f, y: %f, z:%f\n",farBotRight.x, farBotRight.y,farBotRight.z);
+		
+
+		//Frustum Planes
+		vec3 tmp = Normalize(CrossProduct(farBotLeft,farTopLeft)); //Left
+		tmp = MultVec3(invCamMatrix, tmp);
+		frustumPlane[0].a = tmp.x;
+		frustumPlane[0].b = tmp.y;
+		frustumPlane[0].c = tmp.z;
+		frustumPlane[0].d = camMatrix.m[3]*tmp.x + camMatrix.m[7]*tmp.y + camMatrix.m[11]*tmp.z;
+		tmp = Normalize(CrossProduct(farBotRight, farTopRight)); //Right
+		tmp = MultVec3(invCamMatrix, tmp);
+		frustumPlane[1].a = tmp.x;
+		frustumPlane[1].b = tmp.y;
+		frustumPlane[1].c = tmp.z;
+		frustumPlane[1].d = camMatrix.m[3]*tmp.x + camMatrix.m[7]*tmp.y + camMatrix.m[11]*tmp.z;
+		tmp = Normalize(CrossProduct(farTopLeft, farTopRight)); //Top
+		tmp = MultVec3(invCamMatrix, tmp);
+		frustumPlane[2].a = tmp.x;
+		frustumPlane[2].b = tmp.y;
+		frustumPlane[2].c = tmp.z;
+		frustumPlane[2].d = camMatrix.m[3]*tmp.x + camMatrix.m[7]*tmp.y + camMatrix.m[11]*tmp.z;
+		tmp = Normalize(CrossProduct(farBotRight, farBotLeft)); //Bottom
+		tmp = MultVec3(invCamMatrix, tmp);
+		frustumPlane[3].a = tmp.x;
+		frustumPlane[3].b = tmp.y;
+		frustumPlane[3].c = tmp.z;
+		frustumPlane[3].d = camMatrix.m[3]*tmp.x + camMatrix.m[7]*tmp.y + camMatrix.m[11]*tmp.z;
 	}
 	positionCamera();
 	updateColliders();
