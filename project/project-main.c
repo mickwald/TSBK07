@@ -3,6 +3,9 @@
 	// Linking hint for Lightweight IDE
 	// uses framework Cocoa
 #endif
+#include <stdlib.h>
+
+
 #include "MicroGlut.h"
 #include "GL_utilities.h"
 #include "VectorUtils3.h"
@@ -31,7 +34,7 @@ int lockCamera = 0;
 int loops = 0;
 
 // vertex array object
-Model *sphereModel, *tm;
+Model *sphereModel, *tm, *bulletModel;
 
 // Reference to shader program
 GLuint program, texGrass, texMountain, texLake, texTerrain, texSphere;
@@ -45,8 +48,25 @@ mat4 transform, rot, trans, total, complete, scale, sphereModelMat;
 Model *skyBox;
 GLuint skyboxprogram;
 mat4 skyBoxTransform;
+
+//GAME LOGIC STUFF
 Collider playerCol;
 mat4 tmpPlayerMat;
+bool shoot, shotAlive, cooldown = false;
+int cooldownTicks = 50;
+int enemyRespawnCount = 0;
+bool playerAlive = true;
+int winCon = 5;
+int kills = 0;
+bool win = false;
+
+
+//BULLET STUFF
+bullet *bullets;
+int bulletsArrayElements;
+int bulletsArraySize;
+int bulletRespawnCount = 0;
+
 
 //Frustum points
 vec3 farTopLeft, farTopRight, farBotLeft, farBotRight;
@@ -246,6 +266,8 @@ void display(void)
 	//mat4 worldMatrix = IdentityMatrix();
 	//glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, worldMatrix.m);
 	glUniform1i(glGetUniformLocation(program, "color"), false);
+	glUniform1i(glGetUniformLocation(program, "bullet"), false);
+
 	DrawModel(tm, program, "inPosition", "inNormal", "inTexCoord");
 
 	printError("display 2");
@@ -266,6 +288,7 @@ void display(void)
 			mat4 modelToView = Mult(camMatrix, modelToWorld);
 			glUniformMatrix4fv(glGetUniformLocation(drawObjects[i].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
 			glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "color"), true);
+			glUniform1i(glGetUniformLocation(drawObjects[i].shaderprogram, "bullet"), false);
 			glActiveTexture(GL_TEXTURE4);
 			glBindTexture(GL_TEXTURE_2D, drawObjects[i].texNum);
 			glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
@@ -296,6 +319,33 @@ void display(void)
 	i = 0;
 	*/
 
+
+	//Draw bullets
+	int j = 0;
+	while(j < bulletsArrayElements){
+		GLfloat bulletHeight = calcHeight(bullets[j].bulletTransform.m[3], bullets[j].bulletTransform.m[11], ttex.width, tm->vertexArray);
+		bullets[j].bulletTransform.m[7] = bulletHeight + 0.2f;
+		//bullets[j].bulletTransform.m[7] = bulletHeight;
+		bullets[j].col.midPoint.y = bulletHeight;
+		mat4 model = Mult(bullets[j].trans,bullets[j].scale);
+		model = Mult(bullets[j].rot, model);
+		mat4 modelToWorld = Mult(bullets[j].bulletTransform, model);
+		mat4 modelToView = Mult(camMatrix, modelToWorld);
+		glUniformMatrix4fv(glGetUniformLocation(bullets[j].shaderprogram, "mdlMatrix"), 1, GL_TRUE, modelToView.m);
+		glUniform1i(glGetUniformLocation(bullets[j].shaderprogram, "color"), true);
+		glUniform1i(glGetUniformLocation(bullets[j].shaderprogram, "bullet"), true);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, bullets[j].texNum);
+		glUniform1i(glGetUniformLocation(program, "texSphere"), 4); // Texture unit 4
+		//printf("Drawing item %d.\n", i);
+		DrawModel(bullets[j].m, bullets[j].shaderprogram, "inPosition", "inNormal", "inTexCoord");
+		if(j==1){
+			//printf("x: %F y: %f z: %f\n", bullets[0].bulletTransform.m[3], bullets[0].bulletTransform.m[7], bullets[0].bulletTransform.m[11]);
+		}
+		j++;
+	}
+	j = 0;
+
 	//Draw sphere
 	//Get correct texture
 	glActiveTexture(GL_TEXTURE4);
@@ -316,6 +366,7 @@ void display(void)
 	//Upload
 	glUniformMatrix4fv(glGetUniformLocation(program, "mdlMatrix"), 1, GL_TRUE, complete.m);
 	glUniform1i(glGetUniformLocation(program, "color"), true);
+	glUniform1i(glGetUniformLocation(program, "bullet"), false);
 	//Draw
 	DrawModel(sphereModel, program, "inPosition", "inNormal", "inTexCoord");
 
@@ -324,7 +375,11 @@ void display(void)
 
 
 void createSphere(){
-
+	int randomX = rand() % ((int)sphereTransform.m[3]+20)*100 + (abs((int)sphereTransform.m[3]-20)*100);
+	int randomZ = rand() % ((int)sphereTransform.m[11]+20)*100 + (abs((int)sphereTransform.m[11]-20)*100);
+	GLfloat randX = (GLfloat) randomX/100.0f;
+	GLfloat randZ = (GLfloat) randomZ/100.0f;
+	printf("X: %f Z: %f\n",randX,randZ);
 	if( drawArrayElements < drawArraySize){
 		drawObject tmp;
 		tmp.m = LoadModelPlus("webtrcc.obj");
@@ -334,12 +389,13 @@ void createSphere(){
 		tmp.scale = IdentityMatrix();
 		tmp.shaderprogram = program;
 		tmp.objectTransform = IdentityMatrix();
-		tmp.objectTransform = Mult(tmp.objectTransform, T((float)drawArrayElements, 0.0f,10.0f));
+		tmp.objectTransform = Mult(tmp.objectTransform, T(randX, 0.0f,randZ));
 		//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
 		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
 		vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
 		Collider tmpCol = makeSphereCollider(midP, 1.0f);
 		tmp.col = tmpCol;
+		tmp.alive = true;
 		if(__debug__ && !t){
 			printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
 		}
@@ -356,6 +412,85 @@ void createSphere(){
 			}
 		}
 	}
+	else{
+		int i = 0;
+		while(i < drawArrayElements){
+			if(!drawObjects[i].alive){
+				drawObjects[i].alive = true;
+				drawObjects[i].objectTransform = Mult(IdentityMatrix(), T(randX, 0.0f,randZ));
+				//updateDrawObjCollider(drawObjects[i]);
+				break;
+			}
+			i++;
+		}
+		i=0;
+	}
+}
+
+void createBullet(){
+	GLfloat bulletSpawnOffset = 1.0f;
+	GLfloat xRot= sphereModelMat.m[2];
+	GLfloat zRot = sphereModelMat.m[0];
+	if( bulletsArrayElements < bulletsArraySize){
+		bullet tmp;
+		tmp.m = LoadModelPlus("webtrcc.obj");
+		tmp.texName = "rock_01_dif.tga";
+		tmp.trans = IdentityMatrix();
+		tmp.scale = S(0.3f, 0.3f, 0.3f);//IdentityMatrix();
+		tmp.rot = IdentityMatrix();
+		tmp.shaderprogram = program;
+		tmp.bulletTransform = IdentityMatrix();
+		tmp.bulletTransform = Mult(tmp.bulletTransform, T((sphereTransform.m[3] + xRot*bulletSpawnOffset), sphereTransform.m[7] ,(sphereTransform.m[11] + zRot*bulletSpawnOffset)));
+		tmp.bulletSpeed = 0.3f;
+		tmp.moveVec = Normalize(SetVector(tmp.bulletTransform.m[3]-sphereTransform.m[3],tmp.bulletTransform.m[7]-sphereTransform.m[7],tmp.bulletTransform.m[11]-sphereTransform.m[11]));
+		tmp.TTL = 75; //5 sek?
+		tmp.alive = true;
+		//calcSlope(tmp.bulletTransform.m[3], tmp.bulletTransform.m[11],
+		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
+		vec3 midP = SetVector(tmp.bulletTransform.m[3],tmp.bulletTransform.m[7],tmp.bulletTransform.m[11]);
+		Collider tmpCol = makeSphereCollider(midP, 0.5f);
+		tmp.col = tmpCol;
+
+		if(__debug__){
+			printf("sphereModelMat\n 0: %f 2: %f\n",sphereModelMat.m[0],sphereModelMat.m[2] );
+			printf("X: %f Z: %f\n",xRot,zRot);
+			printf("X: %f, Y: %f, Z: %f\n", tmp.moveVec.x, tmp.moveVec.y, tmp.moveVec.z);
+			printf("made a bullet!!!\n");
+			printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",tmp.bulletTransform.m[0],tmp.bulletTransform.m[1],tmp.bulletTransform.m[2],tmp.bulletTransform.m[3],tmp.bulletTransform.m[4],tmp.bulletTransform.m[5],tmp.bulletTransform.m[6],tmp.bulletTransform.m[7],tmp.bulletTransform.m[8],tmp.bulletTransform.m[9],tmp.bulletTransform.m[10],tmp.bulletTransform.m[11],tmp.bulletTransform.m[12],tmp.bulletTransform.m[13],tmp.bulletTransform.m[14],tmp.bulletTransform.m[15]);
+		}
+
+		if(__debug__ && !t){
+			printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
+		}
+
+		if(bulletsArrayElements < bulletsArraySize){
+			bullets[bulletsArrayElements++] = tmp;
+			if(__debug__ && !t){
+				printf("Added bullet\n");
+			}
+		} else {
+			if(__debug__ && !t){
+				printf("Size of bulletArrayElements: %d\n", drawArrayElements);
+				printf("Can't insert more bullets!\n");
+				printf("Size of bullets: %d, and bullets[0]: %d\n", (int) sizeof(bullets), (int) sizeof(bullets[0]));
+			}
+		}
+	}
+	else{
+		int i = 0;
+		while(i < bulletsArrayElements){
+			if(!bullets[i].alive){
+				bullets[i].alive = true;
+				bullets[i].bulletTransform = Mult(IdentityMatrix(), T((sphereTransform.m[3] + xRot*bulletSpawnOffset), sphereTransform.m[7] ,(sphereTransform.m[11] + zRot*bulletSpawnOffset)));
+				bullets[i].moveVec = Normalize(SetVector(bullets[i].bulletTransform.m[3]-sphereTransform.m[3],bullets[i].bulletTransform.m[7]-sphereTransform.m[7],bullets[i].bulletTransform.m[11]-sphereTransform.m[11]));
+				bullets[i].TTL = 75; //5 sek?
+				//updateDrawObjCollider(drawObjects[i]);
+				break;
+			}
+			i++;
+		}
+		i=0;
+	}
 }
 
 void positionCamera(){
@@ -366,35 +501,209 @@ void positionCamera(){
 	}*/
 
 }
+
+void updatePlayerCollider(){
+	vec3 newMidP = SetVector(sphereTransform.m[3],sphereTransform.m[7],sphereTransform.m[11]);
+	playerCol.midPoint = newMidP;
+}
+
 void revertPlayerMovement(){
 	int j;
 	for(j=0; j<16; j++){
 		sphereTransform.m[j] = tmpPlayerMat.m[j];
 	}
+	updatePlayerCollider();
 }
 
-void updateColliders(){
-	vec3 newMidP = SetVector(sphereTransform.m[3],sphereTransform.m[7],sphereTransform.m[11]);
-	playerCol.midPoint = newMidP;
-	int i;
-	while(i < drawArrayElements){
-		drawObjects[i].col.midPoint.y = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+void revertEnemyMovement(){
+
+}
+
+void moveBullet(){
+	int i = 0;
+	while(i < bulletsArrayElements){
+		if(bullets[i]. alive){
+			bullets[i].bulletTransform = Mult(bullets[i].bulletTransform, T(bullets[i].moveVec.x*bullets[i].bulletSpeed, 0, bullets[i].moveVec.z*bullets[i].bulletSpeed));
+			bullets[i].TTL --;
+			if(__debug__){
+				printf("TTL: %d\n", bullets[i].TTL);
+			}
+		}
+		if(bullets[i].TTL <= 0){
+			bullets[i].alive = false;
+			bullets[i].bulletTransform.m[3] = -100.0f;
+			bullets[i].bulletTransform.m[11] = -100.0f;
+		}
 		i++;
 	}
 	i=0;
 }
 
+void updateDrawObjCollider(drawObject o){
+	vec3 newMidP = SetVector(o.objectTransform.m[3],o.objectTransform.m[7],o.objectTransform.m[11]);
+	o.col.midPoint = newMidP;
+	o.col.midPoint.y = calcHeight(o.objectTransform.m[3], o.objectTransform.m[11], ttex.width, tm->vertexArray);
+}
+
+void moveEnemy(){ //moves enemy and checks enemy collision w other enemies and player
+	GLfloat enemySpeed = 0.1f;
+	int i = 0;
+	while(i < drawArrayElements){
+		if(drawObjects[i].alive){
+			//save previous enemy coords
+			vec3 prevTransform = SetVector(drawObjects[i].objectTransform.m[3],drawObjects[i].objectTransform.m[7],drawObjects[i].objectTransform.m[11]);
+
+			//try moving the enemy towards the player
+			vec3 enemyVec = Normalize(SetVector(sphereTransform.m[3] - drawObjects[i].objectTransform.m[3],0,sphereTransform.m[11] - drawObjects[i].objectTransform.m[11]));
+			drawObjects[i].objectTransform = Mult(drawObjects[i].objectTransform, T(enemyVec.x*enemySpeed, 0 , enemyVec.z*enemySpeed));
+
+			//update enemy collider
+			drawObjects[i].col.midPoint = SetVector(drawObjects[i].objectTransform.m[3],drawObjects[i].objectTransform.m[7],drawObjects[i].objectTransform.m[11]);
+
+			//check collisions with player
+			bool hit = checkCollision(playerCol, drawObjects[i].col);
+			if(hit){
+				//revert enemy pos to prev coords
+				if(__debug__)
+					printf("HIT player!!!\n");
+				drawObjects[i].objectTransform.m[3] = prevTransform.x;
+				drawObjects[i].objectTransform.m[7] = prevTransform.y;
+				drawObjects[i].objectTransform.m[11] = prevTransform.z;
+				updateDrawObjCollider(drawObjects[i]);
+			}
+			//check collision with other enemies
+			int j = 0;
+			while(j < drawArrayElements){
+				if(i != j){//dont check itself
+					if(drawObjects[j].alive){
+						hit = checkCollision(drawObjects[i].col, drawObjects[j].col);
+						if(hit){
+							//revert enemy pos to prev coords
+							if(__debug__)
+								printf("HIT enemy!!!\n");
+
+							drawObjects[i].objectTransform.m[3] = prevTransform.x;
+							drawObjects[i].objectTransform.m[7] = prevTransform.y;
+							drawObjects[i].objectTransform.m[11] = prevTransform.z;
+							updateDrawObjCollider(drawObjects[i]);
+						}
+					}
+				}
+					j++;
+			}
+			j=0;
+
+		if(__debug__){
+			printf("enemyVec: %f, %f, %f\n",enemyVec.x,enemyVec.y, enemyVec.z );
+		}
+	}
+	i++;
+}
+i= 0;
+}
+
+void updateEnemyColliders(){ //NOT IN USE DELETE LATER
+	int i = 0;
+	while(i < drawArrayElements){
+		if(drawObjects[i].alive){
+			drawObjects[i].col.midPoint = SetVector(drawObjects[i].objectTransform.m[3],drawObjects[i].objectTransform.m[7],drawObjects[i].objectTransform.m[11]);
+			drawObjects[i].col.midPoint.y = calcHeight(drawObjects[i].objectTransform.m[3], drawObjects[i].objectTransform.m[11], ttex.width, tm->vertexArray);
+			if(__debug__){
+				printf("Emeny midP\n X: %f Y: %f Z: %f\n",drawObjects[i].col.midPoint.x,drawObjects[i].col.midPoint.y,drawObjects[i].col.midPoint.z );
+			}
+		}
+		i++;
+	}
+	i=0;
+
+}
+void updateBulletColliders(){
+	int i = 0;
+	while(i < bulletsArrayElements){
+		if(bullets[i].alive){
+			bullets[i].col.midPoint = SetVector(bullets[i].bulletTransform.m[3],bullets[i].bulletTransform.m[7],bullets[i].bulletTransform.m[11]);
+			bullets[i].col.midPoint.y = calcHeight(bullets[i].bulletTransform.m[3], bullets[i].bulletTransform.m[11], ttex.width, tm->vertexArray);
+			if(__debug__){
+				printf("Bullet midP\n X: %f Y: %f Z: %f\n",bullets[i].col.midPoint.x,bullets[i].col.midPoint.y,bullets[i].col.midPoint.z );
+			}
+		}
+		i++;
+	}
+	i=0;
+
+}
+
 void checkPlayerCollision(){
 	int i = 0;
 	while(i < drawArrayElements){
-		bool hit = checkCollision(playerCol, drawObjects[i].col);
-		if(hit){
-			printf("HIT!\n");
-			revertPlayerMovement();
+		if(drawObjects[i].alive){
+			bool hit = checkCollision(playerCol, drawObjects[i].col);
+			if(hit){
+				if(__debug__)
+					printf("HIT!\n");
+				revertPlayerMovement();
+				playerAlive = false;
+				sphereTransform.m[3] = 0.0f;
+				sphereTransform.m[11] = 0.0f;
+			}
 		}
 		i++;
 	}
 	i= 0;
+}
+
+void checkBulletCollision(){
+	int i = 0;
+	while(i < bulletsArrayElements){
+		if(bullets[i]. alive){
+			int j = 0;
+			while(j < drawArrayElements){
+				if(drawObjects[i].alive){
+					bool hit = checkCollision(bullets[i].col, drawObjects[j].col);
+					if(hit){
+						if(__debug__)
+							printf("HIT!\n");
+						bullets[i].alive = false;
+						bullets[i].TTL = 0;
+						bullets[i].bulletTransform.m[3] = -100.0f;
+						bullets[i].bulletTransform.m[11] = -100.0f;
+
+						drawObjects[j].alive = false;
+						drawObjects[j].objectTransform.m[3] = -100.0f;
+						drawObjects[j].objectTransform.m[11] = -100.0f;
+
+						kills++;
+						//createSphere();
+						//createSphere();
+					}
+				}
+				j++;
+			}
+			j= 0;
+		}
+		i++;
+	}
+	i=0;
+}
+
+void checkShoot(){
+	//cooldown = false;
+	if(shoot && !cooldown){
+		shoot = false;
+		if(__debug__)
+			printf("SHOOT!\n");
+		createBullet();
+
+		cooldown = true;
+		cooldownTicks = 50;
+	}
+	else{
+		if(cooldownTicks == 0){
+			shoot = false;
+			cooldown = false;
+		}
+		cooldownTicks--;
+	}
 }
 
 int equal(mat4 a, mat4 b){
@@ -409,10 +718,15 @@ int equal(mat4 a, mat4 b){
 
 void timer(int i)
 {
+	/*if(bulletRespawnCount == 0){
+		createSphere();
+		bulletRespawnCount++;
+	}*/
 	glutTimerFunc(20, &timer, i);
-	mat4 tmpCamera = camMatrix;
-	checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements, &tmpPlayerMat);
-	if (!equal(tmpCamera,camMatrix)){
+	if(!win){
+		mat4 tmpCamera = camMatrix;
+		checkInput(&t, &sphereSpeed, &sphereTransform, &camMatrix, &lockCamera, &rotTest, &playerCol, drawObjects, &drawArrayElements, &tmpPlayerMat, &shoot, &playerAlive);
+		if (!equal(tmpCamera,camMatrix)){
 		//Recalc frustum
 		farTopLeft = SetVector((far/near)*left,(far/near)*top,-far);
 		farTopRight = SetVector((far/near)*right,(far/near)*top,-far);
@@ -495,12 +809,25 @@ void timer(int i)
 		frustumPlane[3].c = tmp.z;
 		frustumPlane[3].d = camPos.x*tmp.x + camPos.y*tmp.y + camPos.z*tmp.z;
 	}
-	positionCamera();
-	updateColliders();
-	checkPlayerCollision();
-	if(t==0) loops++;
-	if(loops % 10 == 0 && t==0){
-		createSphere();
+		if(playerAlive){
+			updatePlayerCollider();
+			positionCamera();
+			moveBullet();
+			checkShoot();
+			updateBulletColliders();
+			moveEnemy();
+			checkPlayerCollision();
+			checkBulletCollision();
+
+
+		if(t==0) loops++;
+		if(loops % 10 == 0 && t==0){
+			createSphere();
+			}
+		}
+		if(kills == winCon){
+			win = true;
+		}
 	}
 	glutPostRedisplay();
 }
@@ -509,6 +836,7 @@ void timer(int i)
 
 int main(int argc, char **argv)
 {
+	srand(time(NULL));
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitContextVersion(3, 2);
@@ -516,7 +844,8 @@ int main(int argc, char **argv)
 	glutCreateWindow ("TSBK07 Project");
 	glutDisplayFunc(display);
 	printf("Loading...\n");
-	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol, &farTopLeft, &farTopRight, &farBotLeft, &farBotRight);
+
+	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol, &farTopLeft, &farTopRight, &farBotLeft, &farBotRight,&bullets, &bulletsArrayElements, &bulletsArraySize);
 	printf("Load complete\n");
 	/*
 	createSphere();

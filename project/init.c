@@ -14,6 +14,8 @@
 
 int initialArraySize = 10;
 
+int initialBulletArraySize = 3;
+
 typedef struct drawObject {
 	Model *m;
 	char *texName;
@@ -24,7 +26,24 @@ typedef struct drawObject {
 	GLuint shaderprogram;
 	mat4 objectTransform;
 	Collider col;
+	bool alive;
 } drawObject;
+
+typedef struct bullet {
+	Model *m;
+	char *texName;
+	GLuint texNum;
+	mat4 trans;
+	mat4 rot;
+	mat4 scale;
+	GLuint shaderprogram;
+	mat4 bulletTransform;
+	GLfloat bulletSpeed;
+	int TTL;
+	vec3 moveVec;
+	Collider col;
+	bool alive;
+} bullet;
 
 //Light definitions
 Point3D lightSourcesColorsArr[] = { {1.0f, 0.0f, 0.0f}, // Red light
@@ -175,11 +194,46 @@ Model* GenerateTerrain(TextureData *tex)
 	return model;
 }
 
+/*void createSphere(){
+	if( *drawObjectsArrayElements < *drawObjectsArraySize){
+		drawObject tmp;
+		tmp.m = LoadModelPlus("webtrcc.obj");
+		tmp.texName = "rock_01_dif.tga";
+		tmp.trans = IdentityMatrix();
+		tmp.rot = IdentityMatrix();
+		tmp.scale = IdentityMatrix();
+		tmp.shaderprogram = *program;
+		tmp.objectTransform = IdentityMatrix();
+		tmp.objectTransform = Mult(tmp.objectTransform, T(100.0f,1.0f,100.0f);
+		//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
+		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
+		vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
+		Collider tmpCol = makeSphereCollider(midP, 1.0f);
+		tmp.col = tmpCol;
+		tmp.alive = true;
+		if(__debug__ && !t){
+			printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
+		}
+		if(drawArrayElements < drawArraySize){
+			drawObjects[drawArrayElements++] = tmp;
+			if(__debug__ && !t){
+				printf("Added object\n");
+			}
+		} else {
+			if(__debug__ && !t){
+				printf("Size of drawArrayElements: %d\n", drawArrayElements);
+				printf("Can't insert more objects!\n");
+				printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+			}
+		}
+	}
+}*/
 
 
 
 //INIT Starts here
-void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol, vec3 *farTopLeft, vec3 *farTopRight, vec3 *farBotLeft, vec3 *farBotRight)
+
+void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform, mat4 *camMatrix, mat4 *projectionMatrix, mat4 *sphereTransform, GLuint *texGrass, GLuint *texSphere, GLuint *texTerrain, GLuint *texLake, GLuint *texMountain, GLuint *skyboxTex, GLuint *skyboxprogram, GLuint *program, TextureData *ttex, float *sphereSpeed, drawObject **drawObjects, int *drawObjectsArrayElements, int *drawObjectsArraySize, Collider *playerCol, vec3 *farTopLeft, vec3 *farTopRight, vec3 *farBotLeft, vec3 *farBotRight, bullet **bullets, int *bulletsArrayElements, int *bulletsArraySize)
 {
 
 	printError("init start");
@@ -188,7 +242,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 	printError("GL inits");
-	*sphereModel = LoadModelPlus("webtrcc.obj");
+	*sphereModel = LoadModelPlus("bunnyplus.obj");
 	*skyBox = LoadModelPlus("skybox.obj");
 
 	vec3 playerMidP = SetVector(sphereTransform->m[3],sphereTransform->m[7],sphereTransform->m[11]);
@@ -208,6 +262,11 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	*drawObjectsArrayElements = 0;
 	*drawObjectsArraySize = initialArraySize;
 
+	//bullet init
+	printf("bullet init\n");
+	*bullets = (struct bullet*) malloc(sizeof(bullet)*initialBulletArraySize);
+	*bulletsArrayElements = 0;
+	*bulletsArraySize = initialBulletArraySize;
 
 	// Load and compile shader
 	*program = loadShaders("world.vert", "world.frag");
