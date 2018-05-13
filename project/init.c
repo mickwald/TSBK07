@@ -12,7 +12,11 @@
 #define top 0.1
 #define bot -0.1
 
-int initialArraySize = 10;
+//#define __debug__ 0
+
+int initialArraySize = 3;
+
+int initialBulletArraySize = 3;
 
 typedef struct drawObject {
 	Model *m;
@@ -192,6 +196,40 @@ Model* GenerateTerrain(TextureData *tex)
 	return model;
 }
 
+/*void createSphere(){
+	if( *drawObjectsArrayElements < *drawObjectsArraySize){
+		drawObject tmp;
+		tmp.m = LoadModelPlus("webtrcc.obj");
+		tmp.texName = "rock_01_dif.tga";
+		tmp.trans = IdentityMatrix();
+		tmp.rot = IdentityMatrix();
+		tmp.scale = IdentityMatrix();
+		tmp.shaderprogram = *program;
+		tmp.objectTransform = IdentityMatrix();
+		tmp.objectTransform = Mult(tmp.objectTransform, T(100.0f,1.0f,100.0f);
+		//calcSlope(tmp.objectTransform.m[3], tmp.objectTransform.m[11],
+		LoadTGATextureSimple(tmp.texName, &tmp.texNum);
+		vec3 midP = SetVector(tmp.objectTransform.m[3],tmp.objectTransform.m[7],tmp.objectTransform.m[11]);
+		Collider tmpCol = makeSphereCollider(midP, 1.0f);
+		tmp.col = tmpCol;
+		tmp.alive = true;
+		if(__debug__ && !t){
+			printf("Elements: %d, ArraySize: %d\n", drawArrayElements, drawArraySize);
+		}
+		if(drawArrayElements < drawArraySize){
+			drawObjects[drawArrayElements++] = tmp;
+			if(__debug__ && !t){
+				printf("Added object\n");
+			}
+		} else {
+			if(__debug__ && !t){
+				printf("Size of drawArrayElements: %d\n", drawArrayElements);
+				printf("Can't insert more objects!\n");
+				printf("Size of drawObjects: %d, and drawObjects[0]: %d\n", (int) sizeof(drawObjects), (int) sizeof(drawObjects[0]));
+			}
+		}
+	}
+}*/
 
 
 
@@ -228,9 +266,9 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 
 	//bullet init
 	printf("bullet init\n");
-	*bullets = (struct bullet*) malloc(sizeof(bullet)*initialArraySize);
+	*bullets = (struct bullet*) malloc(sizeof(bullet)*initialBulletArraySize);
 	*bulletsArrayElements = 0;
-	*bulletsArraySize = initialArraySize;
+	*bulletsArraySize = initialBulletArraySize;
 
 	// Load and compile shader
 	*program = loadShaders("world.vert", "world.frag");

@@ -33,7 +33,7 @@ void mouseDown(int button, int state, int x, int y)
 	}
 }
 
-void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest, Collider *playerCol, drawObject **drawObjects, int *drawObjectsArrayElements, mat4 *tmpPlayerMat, bool *shoot){
+void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatrix, int *lockCamera, float *rotTest, Collider *playerCol, drawObject **drawObjects, int *drawObjectsArrayElements, mat4 *tmpPlayerMat, bool *shoot, bool *playerAlive){
 
 	//Check mouse input
 	glutMouseFunc(mouseDown);
@@ -102,24 +102,28 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 		*camMatrix = Mult(Ry(1*M_PI/180),*camMatrix );
 	}
 	if(glutKeyIsDown(GLUT_KEY_DOWN)){
-		int j;
-		for(j=0; j<16; j++){
-			tmpPlayerMat->m[j] = sphereTransform->m[j];
+		if(*playerAlive){
+			int j;
+			for(j=0; j<16; j++){
+				tmpPlayerMat->m[j] = sphereTransform->m[j];
+			}
+			*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[2],0,*sphereSpeed*camMatrix->m[0]));
 		}
-		*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[2],0,*sphereSpeed*camMatrix->m[0]));
-
 	}
 	if(glutKeyIsDown(GLUT_KEY_UP)){
-
-		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[2],0,-*sphereSpeed*camMatrix->m[0]));
+		if(*playerAlive){
+			*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[2],0,-*sphereSpeed*camMatrix->m[0]));
+		}
 	}
 	if(glutKeyIsDown(GLUT_KEY_RIGHT)){
-
-		*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[0],0,*sphereSpeed*camMatrix->m[2]));
+		if(*playerAlive){
+			*sphereTransform = Mult(*sphereTransform, T(*sphereSpeed*camMatrix->m[0],0,*sphereSpeed*camMatrix->m[2]));
+		}
 	}
 	if(glutKeyIsDown(GLUT_KEY_LEFT)){
-
-		*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[0],0,-*sphereSpeed*camMatrix->m[2]));
+		if(*playerAlive){
+			*sphereTransform = Mult(*sphereTransform, T(-*sphereSpeed*camMatrix->m[0],0,-*sphereSpeed*camMatrix->m[2]));
+		}
 	}
 	if(glutKeyIsDown(GLUT_KEY_CONTROL)){
 		*shoot = true;
@@ -140,6 +144,10 @@ void checkInput(int *t, float *sphereSpeed, mat4 *sphereTransform, mat4 *camMatr
 	if(glutKeyIsDown('r')){
 		*camMatrix = IdentityMatrix();
 		*camMatrix = Mult(Ry(135*M_PI/180.0f),*camMatrix);
+		camMatrix->m[3] = 1.0f;
+		camMatrix->m[7] = -5.0f;
+		camMatrix->m[11] = -10.0f;
+		*playerAlive = true;
 	}
 	if(glutKeyIsDown('m')){
 		printf("0: %f %f %f %f \n1: %f %f %f %f \n2: %f %f %f %f \n3: %f %f %f %f \n\n",camMatrix->m[0],camMatrix->m[1],camMatrix->m[2],camMatrix->m[3],camMatrix->m[4],camMatrix->m[5],camMatrix->m[6],camMatrix->m[7],camMatrix->m[8],camMatrix->m[9],camMatrix->m[10],camMatrix->m[11],camMatrix->m[12],camMatrix->m[13],camMatrix->m[14],camMatrix->m[15]);
