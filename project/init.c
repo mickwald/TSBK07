@@ -12,7 +12,7 @@
 #define top 0.1
 #define bot -0.1
 
-int initialArraySize = 3;
+int initialArraySize = 10;
 
 typedef struct drawObject {
 	Model *m;
