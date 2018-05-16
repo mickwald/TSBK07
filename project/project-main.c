@@ -33,10 +33,10 @@ float sphereSpeed;
 int lockCamera = 0;
 int loops = 0;
 
-// vertex array object
+// Player model, ground model and bullet model
 Model *sphereModel, *tm, *bulletModel;
 
-// Reference to shader program
+// Reference to shader program and textures
 GLuint program, texGrass, texMountain, texLake, texTerrain, texSphere;
 mat4 sphereTransform, projectionMatrix;
 TextureData ttex; // terrain
@@ -44,12 +44,12 @@ int t = 0;
 
 mat4 camMatrix;
 mat4 transform, rot, trans, total, complete, scale, sphereModelMat;
-//SKYBOX STUFF!!!
+//Skybox variables
 Model *skyBox;
 GLuint skyboxprogram;
 mat4 skyBoxTransform;
 
-//GAME LOGIC STUFF
+//Game vars
 Collider playerCol;
 mat4 tmpPlayerMat;
 bool shoot, shotAlive, cooldown = false;
@@ -61,7 +61,7 @@ int kills = 0;
 bool win = false;
 
 
-//BULLET STUFF
+//Bullet vars
 bullet *bullets;
 int bulletsArrayElements;
 int bulletsArraySize;
@@ -150,7 +150,6 @@ GLfloat calcHeight(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
 }
 
 vec3 calcSlope(GLfloat in_x, GLfloat in_z, int zLen, GLfloat *vertex){
-	//vec3 spherePos = SetVector(sphereTransform[3],sphereTransform[7],sphereTransform[11]);
 	int x, z;
 	if(__debug__ && !t){
 		printf("X_in: %f, Z_in: %f\n", in_x, in_z);
@@ -210,13 +209,17 @@ mat4 calcSlopeRotMat(){
 }
 
 int inFrustum(mat4 objectTransform){
-	//printf("Checking frustum..\n");
+	if(__debug__){
+		printf("Checking frustum..\n");
+	}
 	vec3 point = SetVector(objectTransform.m[3],objectTransform.m[7],objectTransform.m[11]);
 	int i = 0;
 	for(i = 0; i<4;i++){
 		float distance = point.x*frustumPlane[i].a + point.y*frustumPlane[i].b + point.z*frustumPlane[i].c;
-		//printf("Plane %i: a=%f b=%f c=%f d=%f\n",i,frustumPlane[i].a,frustumPlane[i].b,frustumPlane[i].c,frustumPlane[i].d);
-		//printf("Distance: %f\n", distance);
+		if(__debug__){
+			printf("Plane %i: a=%f b=%f c=%f d=%f\n",i,frustumPlane[i].a,frustumPlane[i].b,frustumPlane[i].c,frustumPlane[i].d);
+			printf("Distance: %f\n", distance);
+		}
 		if(frustumPlane[i].d > distance){
 			return 0;
 		}
@@ -379,10 +382,9 @@ void createSphere(){
 	int randomZ = rand() % ((int)sphereTransform.m[11]+20)*100 + (abs((int)sphereTransform.m[11]-20)*100);
 	GLfloat randX = (GLfloat) randomX/100.0f;
 	GLfloat randZ = (GLfloat) randomZ/100.0f;
-	printf("X: %f Z: %f\n",randX,randZ);
 	if( drawArrayElements < drawArraySize){
 		drawObject tmp;
-		tmp.m = LoadModelPlus("webtrcc.obj");
+		tmp.m = (drawArrayElements % 2 == 0)?LoadModelPlus("webtrcc.obj"):LoadModelPlus("bunnyplus.obj");
 		tmp.texName = "rock_01_dif.tga";
 		tmp.trans = IdentityMatrix();
 		tmp.rot = IdentityMatrix();

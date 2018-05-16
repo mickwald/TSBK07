@@ -284,7 +284,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 
 	glUseProgram(*program);
 	glUniform1i(glGetUniformLocation(*program, "texGrass"), 0); // Texture unit 0
-	LoadTGATextureSimple("Grass_tile_B_diffuse.tga", texGrass);
+	LoadTGATextureSimple("dried_grass.tga", texGrass);
 	LoadTGATextureSimple("SkyBox512.tga", skyboxTex);
 
 	vec3 cam = {0, 0, 0};
@@ -303,7 +303,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 	LoadTGATextureData("fft-terrain.tga", ttex);
 	*tm = GenerateTerrain(ttex);
 	//If done above Texture data load 0 generate terrain, causes graphical errors in edges ???
-	LoadTGATextureSimple("rock_02_dif.tga", texMountain);
+	LoadTGATextureSimple("rock_01_rough.tga", texMountain);
 	LoadTGATextureSimple("rock_02_dif.tga", texLake);
 	LoadTGATextureSimple("fft-terrain.tga", texTerrain);
 	LoadTGATextureSimple("rock_01_dif.tga", texSphere);
