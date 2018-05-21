@@ -273,7 +273,7 @@ void display(void)
 	printError("display 2");
 
 	//Draw drawObjects
-	int i = 0;
+	int i = 5;
 	while(i < drawArrayElements){
 		if(inFrustum(drawObjects[i].objectTransform)){
 			if(__frustum_print__){
@@ -301,7 +301,6 @@ void display(void)
 		i++;
 	}
 	i = 0;
-	/*
 	while(i < 5){
 		//printf("Drawing item %d.\n", i);
 		mat4 model = Mult(drawObjects[i].trans,drawObjects[i].scale);
@@ -317,7 +316,6 @@ void display(void)
 		i++;	
 	}
 	i = 0;
-	*/
 
 
 	//Draw bullets
@@ -847,7 +845,6 @@ int main(int argc, char **argv)
 
 	init (&sphereModel, &skyBox, &tm, &skyBoxTransform, &camMatrix, &projectionMatrix, &sphereTransform, &texGrass, &texSphere, &texTerrain, &texLake, &texMountain, &skyboxTex, &skyboxprogram, &program, &ttex, &sphereSpeed, &drawObjects, &drawArrayElements, &drawArraySize, &playerCol, &farTopLeft, &farTopRight, &farBotLeft, &farBotRight,&bullets, &bulletsArrayElements, &bulletsArraySize);
 	printf("Load complete\n");
-	/*
 	createSphere();
 	createSphere();
 	createSphere();
@@ -858,7 +855,6 @@ int main(int argc, char **argv)
 	LoadTGATextureSimple("rock_02_nm_inv.tga", &drawObjects[2].texNum);
 	LoadTGATextureSimple("rock_01_rough.tga", &drawObjects[3].texNum);
 	LoadTGATextureSimple("SkyBox512.tga", &drawObjects[4].texNum);
-	*/
 	glutTimerFunc(20, &timer, 0);
 	glutPassiveMotionFunc(mouse);
 	glutMainLoop();
