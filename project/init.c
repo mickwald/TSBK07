@@ -284,7 +284,7 @@ void init(Model **sphereModel, Model **skyBox, Model **tm, mat4 *skyBoxTransform
 
 	glUseProgram(*program);
 	glUniform1i(glGetUniformLocation(*program, "texGrass"), 0); // Texture unit 0
-	LoadTGATextureSimple("dried_grass.tga", texGrass);
+	LoadTGATextureSimple("Grass_tile_B_diffuse.tga", texGrass);
 	LoadTGATextureSimple("SkyBox512.tga", skyboxTex);
 
 	vec3 cam = {0, 0, 0};
