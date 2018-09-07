@@ -22,7 +22,7 @@
 
 #define near 1.0
 
-#define far 100.0
+#define far 100000.0
 
 #define right 0.5
 
@@ -151,8 +151,8 @@ void drawWindmill(){
 	glUseProgram(program);
 	
 	//Windmill transforms	
-	trans = T(0.0f, 0, 0.0f);
-	rot = Ry(0);
+	trans = T(0.0f, 6.0f, 6.0f);
+	rot = Rz(3*t);
 	total = Mult(rot, trans);
 
 	//Walls
@@ -181,7 +181,7 @@ void drawWindmill(){
 
 	//Blades
 	int i;
-	mat4 rotBlade = Rx(t/2.0f);
+	mat4 rotBlade = Rx(10.0f*t/2.0f);
 	transBlade = Mult(T(4.5f, 9.2f, 0.1f) , trans);
 	for(i = 4; i >= 1 ; i--){
 		//Move object to camera
@@ -212,16 +212,16 @@ void drawGround(){
 
 void CheckInput(){
 	if(glutKeyIsDown('w')){
-		cameraMatrix = Mult(cameraMatrix, T(0,0,0.2f));
+		cameraMatrix = Mult(cameraMatrix, T(-0.4f*cameraMatrix.m[2],0,0.4f*cameraMatrix.m[0]));
 	}	
 	if(glutKeyIsDown('s')){
-		cameraMatrix = Mult(cameraMatrix, T(0,0,-0.2f));
+		cameraMatrix = Mult(cameraMatrix, T(0.4f*cameraMatrix.m[2],0,-0.4f*cameraMatrix.m[0]));
 	}	
 	if(glutKeyIsDown('a')){
-		cameraMatrix = Mult(cameraMatrix, T(0.2f,0,0));
+		cameraMatrix = Mult(cameraMatrix, T(0.4f*cameraMatrix.m[0],0,0.4f*cameraMatrix.m[2]));
 	}	
 	if(glutKeyIsDown('d')){
-		cameraMatrix = Mult(cameraMatrix, T(-0.2f,0,0));
+		cameraMatrix = Mult(cameraMatrix, T(-0.4f*cameraMatrix.m[0],0,-0.4f*cameraMatrix.m[2]));
 	}	
 	if(glutKeyIsDown('i')){
 		cameraMatrix = Mult(cameraMatrix, T(0,-0.2f,0));
